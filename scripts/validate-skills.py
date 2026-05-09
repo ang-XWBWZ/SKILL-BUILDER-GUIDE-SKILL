@@ -120,11 +120,36 @@ def validate_semantic(skill_dir):
     return issues
 
 
+def validate_project_paths(skill_dir, project_root):
+    """Cross-verify: check whether file paths claimed in skill body exist in target project."""
+    import re
+    issues = []
+    seen = set()
+    skill_md = os.path.join(skill_dir, "SKILL.md")
+    if not os.path.exists(skill_md):
+        return issues
+    with open(skill_md, "r", encoding="utf-8") as f:
+        content = f.read()
+    # Match backtick-enclosed paths with ≥4 directory levels + file extension
+    # (4+ levels filters out tree fragments like `filter/File.java` or `web/filter/File.java`)
+    pattern = r'`([a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\./]+\.(java|js|vue|py|sh|xml|json|yaml|yml|ts|css|html))`'
+    for match in re.finditer(pattern, content):
+        path = match.group(1)
+        if path.startswith("{") or path.startswith("http") or "..." in path or path in seen:
+            continue
+        seen.add(path)
+        full = os.path.join(project_root, path)
+        if not os.path.exists(full):
+            issues.append(f"claimed path not found in project: `{path}`")
+    return issues
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Skill validation (V1+V2+V3)")
     parser.add_argument("root", nargs="?", default=".", help="Skills directory")
     parser.add_argument("--semantic", action="store_true", help="Run V3 semantic validation (file path existence)")
+    parser.add_argument("--project-path", help="Target project root for cross-verifying claimed file paths")
     args = parser.parse_args()
     root = args.root
 
@@ -150,6 +175,12 @@ def main():
         if args.semantic:
             semantic_issues = validate_semantic(skill_dir)
             for issue in semantic_issues:
+                errors.append(issue)
+
+        # V3+ cross-verification (optional)
+        if args.project_path:
+            cross_issues = validate_project_paths(skill_dir, args.project_path)
+            for issue in cross_issues:
                 errors.append(issue)
 
         status = "[OK]" if not errors else "[FAIL]"

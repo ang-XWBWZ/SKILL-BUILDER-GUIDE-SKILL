@@ -75,7 +75,7 @@ Every skill is defined on **two independent, orthogonal dimensions**:
 | Workflow (workflow) | L1 | functional | Phase→input→steps→output, checklists | `templates/example-workflow/` |
 | Change Model (change-model) | L1 | functional | WHY/WHAT/HOW/VALIDATION, call-chain check. **Implicit trigger**: at CONFIRM phase, Agent asks whether to generate a change report for the completed work. | `references/change-model.md` |
 | Call-Chain (call-chain) | L1 | functional | Tracing method, type checking, final-call checklist | `templates/example-call-chain/` |
-| Scripts (scripts) | L0 | atomic | Script inventory, execution flow, error handling | — |
+| Scripts (scripts) | L0 | atomic | Script inventory, execution flow, error handling. **Min threshold**: ≥5 standalone scripts or ≥1 complex deployment pipeline. | — |
 | Delegation (delegation) | L1 | planning | Decomposition criteria, model routing | `references/delegation.md` |
 
 ### 1.4 Skill Selection
@@ -181,6 +181,7 @@ Before delivering generated skills, verify every item:
 - [ ] **Naming disambiguation**: risk levels use R0-R3 (not L0-L3); execution tiers use L0-L3
 - [ ] **Existing conventions**: project's existing docs, changelogs, workflows are either incorporated or explicitly replaced (not silently ignored)
 - [ ] **Cross-references**: all relative paths resolve to existing files within the target project
+- [ ] **Technical accuracy**: version numbers, class names, file paths, and dependency labels verified against target project source (not assumed or approximated)
 - [ ] **Trigger words**: 5-15 per skill, project-specific (no generic terms like "develop" or "modify")
 - [ ] **No placeholders**: every `{placeholder}` replaced with actual content from scan
 - [ ] **Token budget**: each SKILL.md ≤5000 tokens
