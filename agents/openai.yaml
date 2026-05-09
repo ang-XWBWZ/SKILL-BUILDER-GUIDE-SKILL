@@ -1,0 +1,22 @@
+interface:
+  display_name: "L1 — Skill Builder"
+  short_description: "L1 — AI Agent Skills creation methodology and pipeline"
+  default_prompt: "Use skill-builder to create or validate project-specific AI Agent skills"
+policy:
+  allow_implicit_invocation: false
+triggers:
+  - create skill
+  - skill system
+  - skill template
+  - skill creation
+  - generate project skill
+  - model tier
+  - L0 delegation
+  - skill validation
+  - frontmatter spec
+  - openai.yaml
+  - Plan Tree
+  - task decomposition
+  - skill builder
+  - validate skill
+  - skill directory

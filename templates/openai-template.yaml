@@ -1,0 +1,23 @@
+# openai.yaml Template
+
+# Usage:
+# 1. Copy to skills/{skill-name}/agents/openai.yaml
+# 2. Replace {placeholders}
+# 3. Label model tier in display_name: L0/L1/L2
+
+```yaml
+interface:
+  display_name: "L{N} — {project}-{skill-type}"
+  short_description: "L{N} — {one-line description}"
+  default_prompt: "Use {project}-{skill-type} to {purpose}"
+policy:
+  allow_implicit_invocation: false
+triggers:
+  - {trigger 1}
+  - {trigger 2}
+  - {trigger 3}
+  - {trigger 4}
+  - {trigger 5}
+  - {trigger 6}
+  - {trigger 7}
+```

@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+"""验证技能文件的准确性：文件路径存在性、引用完整性、frontmatter 完整性。"""
+
+import os
+import sys
+import yaml  # requires: pip install pyyaml
+
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+def validate_skill(skill_dir):
+    """Validate a single skill directory."""
+    errors = []
+    warnings = []
+    skill_name = os.path.basename(skill_dir)
+
+    # 1. 检查必需文件
+    required_files = ["SKILL.md", "agents/openai.yaml"]
+    for f in required_files:
+        path = os.path.join(skill_dir, f)
+        if not os.path.exists(path):
+            errors.append(f"缺少必需文件: {f}")
+
+    # 2. 检查 SKILL.md frontmatter
+    skill_md = os.path.join(skill_dir, "SKILL.md")
+    if os.path.exists(skill_md):
+        with open(skill_md, "r", encoding="utf-8") as f:
+            content = f.read()
+        # 检查 frontmatter 分隔符
+        if not content.startswith("---"):
+            errors.append("SKILL.md: 缺少 frontmatter 起始分隔符 ---")
+        fm = content[:2000]  # v2.0 frontmatter 较长，扩大搜索范围
+
+        # 检查必要字段
+        if "name:" not in fm:
+            errors.append("SKILL.md: 缺少 name 字段")
+        # 检查状态字段
+        if "status:" in fm:
+            status_match = None
+            for line in fm.split("\n"):
+                if line.strip().startswith("status:"):
+                    status_match = line.strip()
+                    break
+            if status_match:
+                status_value = status_match.split(":", 1)[1].strip()
+                valid_statuses = ["draft", "active", "deprecated", "superseded"]
+                if status_value not in valid_statuses:
+                    warnings.append(f"SKILL.md: status 值 '{status_value}' 无效，有效值: {', '.join(valid_statuses)}")
+                if status_value == "superseded" and "supersededBy:" not in fm:
+                    warnings.append("SKILL.md: status 为 superseded 但缺少 supersededBy 字段")
+        else:
+            warnings.append("SKILL.md: 建议添加 status 字段 (draft|active|deprecated|superseded)")
+
+        # 检查 review_by (snake_case, v2.0) 或 reviewBy (camelCase, v1.0) 是否过期
+        review_key = None
+        review_date_str = None
+        if "review_by:" in fm:
+            review_key = "review_by"
+        elif "reviewBy:" in fm:
+            review_key = "reviewBy"
+        if review_key:
+            from datetime import datetime
+            for line in fm.split("\n"):
+                if line.strip().startswith(review_key + ":"):
+                    review_date_str = line.strip().split(":", 1)[1].strip()
+                    break
+            if review_date_str:
+                try:
+                    review_date = datetime.strptime(review_date_str, "%Y-%m-%d").date()
+                    if review_date < datetime.now().date():
+                        warnings.append(f"SKILL.md: {review_key} ({review_date_str}) 已过期，建议复核技能内容")
+                except ValueError:
+                    warnings.append(f"SKILL.md: {review_key} 日期格式无效，应为 YYYY-MM-DD")
+
+    # 3. 检查 openai.yaml
+    yaml_path = os.path.join(skill_dir, "agents/openai.yaml")
+    if os.path.exists(yaml_path):
+        try:
+            with open(yaml_path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+            if not data:
+                errors.append("agents/openai.yaml: 文件为空或格式错误")
+            else:
+                # 检查 triggers
+                triggers = data.get("triggers", [])
+                if len(triggers) < 5:
+                    warnings.append(f"agents/openai.yaml: triggers 仅 {len(triggers)} 个，建议至少 5 个")
+                if len(triggers) > 15:
+                    warnings.append(f"agents/openai.yaml: triggers 达 {len(triggers)} 个，建议不超过 15 个")
+                # 检查模型等级标注
+                desc = data.get("interface", {}).get("short_description", "")
+                if not any(tag in desc for tag in ["L0", "L1", "L2", "L3"]):
+                    warnings.append("agents/openai.yaml: short_description 未标注模型等级 (L0/L1/L2/L3)")
+        except yaml.YAMLError as e:
+            errors.append(f"agents/openai.yaml: YAML 解析错误: {e}")
+
+    return skill_name, errors, warnings
+
+
+def validate_semantic(skill_dir):
+    """V3: Validate file paths referenced in SKILL.md body exist."""
+    issues = []
+    skill_md = os.path.join(skill_dir, "SKILL.md")
+    if not os.path.exists(skill_md):
+        return issues
+    with open(skill_md, "r", encoding="utf-8") as f:
+        content = f.read()
+    # Extract relative markdown links
+    import re
+    links = re.findall(r'\[([^\]]*)\]\(([^)]*)\)', content)
+    for label, target in links:
+        if target.startswith("http") or target.startswith("#"):
+            continue
+        target_path = target.split("#")[0]
+        if not target_path:
+            continue
+        full = os.path.normpath(os.path.join(skill_dir, target_path))
+        if not os.path.exists(full):
+            issues.append(f"broken link: [{label}]({target}) -> {full}")
+    return issues
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Skill validation (V1+V2+V3)")
+    parser.add_argument("root", nargs="?", default=".", help="Skills directory")
+    parser.add_argument("--semantic", action="store_true", help="Run V3 semantic validation (file path existence)")
+    args = parser.parse_args()
+    root = args.root
+
+    print(f"=== 技能验证报告 ===")
+    print(f"扫描目录: {os.path.abspath(root)}\n")
+
+    total_skills = 0
+    all_errors = []
+    all_warnings = []
+
+    for item in os.listdir(root):
+        skill_dir = os.path.join(root, item)
+        if not os.path.isdir(skill_dir):
+            continue
+        skill_md = os.path.join(skill_dir, "SKILL.md")
+        if not os.path.exists(skill_md):
+            continue  # 不是技能目录
+
+        total_skills += 1
+        name, errors, warnings = validate_skill(skill_dir)
+
+        # V3 semantic (optional)
+        if args.semantic:
+            semantic_issues = validate_semantic(skill_dir)
+            for issue in semantic_issues:
+                errors.append(issue)
+
+        status = "[OK]" if not errors else "[FAIL]"
+        print(f"\n{status} {name}")
+        for e in errors:
+            print(f"  错误: {e}")
+            all_errors.append(f"{name}: {e}")
+        for w in warnings:
+            print(f"  警告: {w}")
+            all_warnings.append(f"{name}: {w}")
+
+    print(f"\n--- 摘要 ---")
+    print(f"扫描技能数: {total_skills}")
+    print(f"错误数: {len(all_errors)}")
+    print(f"警告数: {len(all_warnings)}")
+    if args.semantic:
+        print(f"V3 语义验证: 已启用")
+
+    if all_errors:
+        print("\n[FAIL] 验证未通过，请修复上述错误。")
+        sys.exit(1)
+    elif all_warnings:
+        print("\n[WARN] 验证通过但存在警告。")
+    else:
+        print("\n[OK] 全部通过！")
+
+if __name__ == "__main__":
+    main()

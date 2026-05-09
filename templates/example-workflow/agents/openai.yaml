@@ -1,0 +1,14 @@
+interface:
+  display_name: "L1-functional — example-workflow"
+  short_description: "L1-functional — Development workflow skill template. Phase-step-checklists for common tasks."
+  default_prompt: "Use example-workflow to create project-specific development workflow guides."
+policy:
+  allow_implicit_invocation: false
+triggers:
+  - 开发流程
+  - 工作流
+  - 开发步骤
+  - checklist
+  - 阶段步骤
+  - 部署流程
+  - 修复流程
