@@ -1,5 +1,8 @@
 # Execution Tree — Unified Task Decomposition & Execution Model
 
+> *图难于其易，为大于其细。天下难事必作于易，天下大事必作于细。* ——《道德经》
+> 复杂问题拆成小问题，每个小问题交给对的人。这就是执行树的全部智慧。
+
 > **Load when**: Task contains multiple sub-goals, needs decomposition, delegation pattern selection, sub-agent dispatch, or non-convergence diagnosis. Referenced from `SKILL.md` §2.7 (L3 Routing Table).
 >
 > The execution tree unifies four concepts that are the same thing viewed from different angles: **pipeline** (lifecycle), **decomposition** (how the tree expands), **delegation** (who executes each node), **progressive loading** (what context each node loads).

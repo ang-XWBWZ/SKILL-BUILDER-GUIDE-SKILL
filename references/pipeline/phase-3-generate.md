@@ -1,5 +1,8 @@
 # Phase 3: GENERATE — 生成技能文件
 
+> *梓匠轮舆，能与人规矩，不能使人巧。* ——《孟子·尽心下》
+> 生成不是填空，是把扫描看到的真实，翻译成技能能用的语言。
+
 ## 生成规则
 
 - **执行者**: Sonnet (L1)
@@ -77,6 +80,56 @@ Agent(
 - L0 任务清单：根据项目技术栈扩充（如"查 Maven 依赖版本"）
 - 下放格式：保持通用格式，增加项目特定的路径/配置示例
 
+## CLAUDE.md 生成
+
+CLAUDE.md 与 SKILL.md、openai.yaml 并列生成。规范见 `references/claude-md-spec.md`。
+
+**生成 Prompt 模板**：
+
+```
+Agent(
+  description: "生成 CLAUDE.md",
+  model: "sonnet",
+  prompt: """
+    【任务】为 {project_name} 生成 CLAUDE.md
+
+    【模块选择】{claude_md_modules}（ANALYZE 阶段决策）
+
+    【数据来源】
+    - 项目身份: {analalyze_result}
+    - 技能计划: {skill_plan}
+    - 快速命令: SCAN — {build_config_file}
+    - 技术栈: SCAN — {dependency_config}
+    - 目录结构: SCAN — {directory_tree}
+    - 分层架构: SCAN — {layer_identification}
+    - 兼容模式: SCAN — {compatibility_patterns}
+    - 外部依赖: SCAN — {integration_layer}
+
+    【生成要求】
+    1. 固定骨架 A-D 全部填入（项目身份、行为章程、技能路由、快速命令）
+    2. 行为章程使用固定 4 条 + 项目定制规则（如有）
+    3. 快速命令从 SCAN 的 package.json/Makefile/pom.xml 提取，每条可直接复制执行
+    4. 可选模块按 ANALYZE 决策的列表填入，未选中的不生成
+    5. 所有数据从 SCAN 结果填入，不重新采集
+    6. 总 token ≤1500
+    7. 零占位符残留
+
+    【输出格式】完整 CLAUDE.md 内容
+  """
+)
+```
+
+**模块选择参照**：
+
+| 项目画像 | 开启模块 |
+|---------|---------|
+| 所有项目 | M1（默认） |
+| ≥3 模块或 ≥50 源文件 | + M2 |
+| 全栈/微服务/多模块 | + M3 |
+| SCAN 发现非主流模式 | + M4 |
+| 领域术语 ≥5 | + M5 |
+| 外部依赖 ≥3 | + M6 |
+
 ## 质量自检（与 SKILL.md §2.4.1 完整性清单同步）
 
 生成完成后，在交付 Phase 4 验证之前，Sonnet 自检：
@@ -94,3 +147,9 @@ Agent(
 - [ ] 命名辨析：风险等级使用 R0-R3，执行层级使用 L0-L3
 - [ ] 已有规范：项目现有文档/变更日志/流程已被纳入或明确替换
 - [ ] 生成特定类型技能前已加载对应的 L3 reference
+- [ ] **CLAUDE.md**：固定骨架 A-D 全部填入
+- [ ] **CLAUDE.md**：模块选择与 ANALYZE 决策一致
+- [ ] **CLAUDE.md**：快速命令可复制执行，无占位符
+- [ ] **CLAUDE.md**：技术栈版本与 SCAN 结果 100% 一致
+- [ ] **CLAUDE.md**：技能路由与生成技能一一对应
+- [ ] **CLAUDE.md**：总 token ≤1500

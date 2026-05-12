@@ -10,6 +10,9 @@ version: 1.0.0
 status: active
 ---
 
+> *凡事豫则立，不豫则废。* ——《中庸》
+> 好的流程不让你觉得被管着，而是让你不用想下一步做什么。
+
 # Development Workflow Skill Template
 
 > **Positioning**: Functional tier skill — provides **step-by-step workflow guides** for common development tasks. Orchestrated by [delegation](../../references/execution-tree.md) (planning) and [skill-builder-guide](../../SKILL.md) (meta).

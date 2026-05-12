@@ -1,5 +1,8 @@
 # Skill Template
 
+> *大匠诲人，必以规矩；学者亦必以规矩。* ——《孟子·告子上》
+> 模板是骨架，项目是血肉。骨架对了，血肉才长得正。
+
 > Replace `{placeholder}` with project-specific content. Add/remove sections as needed.
 > Attribution: do not add author signatures, agent names, or promotional links. See [docs/attribution-discipline.md](../docs/attribution-discipline.md).
 

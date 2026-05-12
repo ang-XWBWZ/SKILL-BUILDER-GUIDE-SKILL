@@ -1,5 +1,8 @@
 # openai.yaml Template
 
+> *鼓不预五音，而为五音之主。* ——《淮南子》
+> 触发词是技能的门铃。按对了，技能才会应门。
+
 # Usage:
 # 1. Copy to skills/{skill-name}/agents/openai.yaml
 # 2. Replace {placeholders}

@@ -10,6 +10,9 @@ version: 1.0.0
 status: active
 ---
 
+> *牵一发而动全身。* ——龚自珍《自春徂秋偶有所触》
+> 改一行代码之前先知道谁在调用它。这不是顾虑，是常识。
+
 # Call-Chain Tracing Skill Template
 
 > **Positioning**: Functional tier skill — provides **structured call-chain tracing methodology** for verifying data flow correctness. Orchestrated by [delegation](../../references/execution-tree.md) (planning) and [skill-builder-guide](../../SKILL.md) (meta).

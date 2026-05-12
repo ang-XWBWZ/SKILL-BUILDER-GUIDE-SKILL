@@ -11,6 +11,9 @@ version: 1.2.0
 status: active
 ---
 
+> *不识庐山真面目，只缘身在此山中。* ——苏轼《题西林壁》
+> 在一个陌生项目里迷路的时间，本可以用来做出好东西。
+
 # Code Map Skill Template
 
 > **Position**: Atomic tier / L0 execution tier — pure file path mapping, **no reasoning required, must be executed by Haiku**. Composed by [change-model](../../references/change-model.md) (functional), [delegation](../../references/execution-tree.md) (planning), [skill-builder-guide](../../SKILL.md) (meta).

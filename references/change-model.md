@@ -1,5 +1,8 @@
 # Change Model — Structured Change Reports
 
+> *前事之不忘，后事之师也。* ——《战国策·赵策一》
+> 代码会变迁，但每一次变迁的理由不该被遗忘。
+
 > **Load when (explicit)**: Generating change reports, DiffLogs, Release Notes, archiving change records, or performing call-chain checks.
 > **Load when (implicit)**: Agent has completed a modification to the project and is entering the CONFIRM phase of any pipeline execution. Agent should ask: "Generate a change report for this session?"
 > Referenced from `SKILL.md` §2.7 (L3 Routing Table).

@@ -1,5 +1,8 @@
 # SKILL.md Frontmatter Spec
 
+> *名不正，则言不顺；言不顺，则事不成。* ——《论语·子路》
+> 字段不是装饰，是工具要消费的数据。没有消费者的字段，只是一行死字。
+
 ## Required Fields
 
 | Field | Type | Description |

@@ -1,5 +1,8 @@
 # End-to-End Example: Creating Skills for a NestJS Backend
 
+> *谋定而后动，知止而有得。* ——《孙子兵法》
+> 动手之前多看两眼，比写完再改省十倍时间。
+
 > This is a concrete walkthrough showing what each phase produces. Use it as a granularity benchmark when creating skills for any project.
 
 ## Project Profile

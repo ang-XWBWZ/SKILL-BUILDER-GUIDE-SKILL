@@ -1,5 +1,8 @@
 # Skill Builder Guide — Dev-Time Routing
 
+> *君子生非异也，善假于物也。* ——《荀子·劝学》
+> 代码让人和机器对话，这份文件让智能体和项目对话。
+
 > **This file routes development work on the skill-builder skill itself.** For the skill specification, see `SKILL.md`.
 
 ---

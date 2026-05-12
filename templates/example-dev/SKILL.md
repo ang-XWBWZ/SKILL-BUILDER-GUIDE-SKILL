@@ -10,6 +10,9 @@ version: 1.2.0
 status: active
 ---
 
+> *不以规矩，不能成方圆。* ——《孟子·离娄上》
+> 团队里最贵的不是服务器，是每个人对代码共识的每一次重建。
+
 # Development Standards Skill Template
 
 > **Positioning**: Atomic tier skill — provides an **information lookup table** for tech stack, layered architecture, and naming conventions. Orchestrated by [change-model](../../references/change-model.md) (functional), [delegation](../../references/execution-tree.md) (planning), and [skill-builder-guide](../../SKILL.md) (meta).

@@ -1,5 +1,8 @@
 # Skill Validation Protocol
 
+> *人谁无过，过而能改，善莫大焉。* ——《左传·宣公二年》
+> 信不过自己写的东西，才是写出好东西的开始。
+
 ## Three-Layer Model
 
 | Layer | Checks | Tool |

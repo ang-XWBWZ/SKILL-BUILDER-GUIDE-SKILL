@@ -11,6 +11,9 @@ version: 3.0.0
 status: active
 ---
 
+> *授人以鱼，不如以渔。* ——《淮南子·说林训》
+> 技能教会智能体怎么做事，这份文件教会技能怎么诞生。
+
 # Skill Builder — AI Agent Skills Creation Guide
 
 > **Position**: meta tier skill. Output = new skill files (SKILL.md + openai.yaml), not business code.
@@ -114,21 +117,23 @@ The pipeline operates on an **Execution Tree** — the unified model that combin
 ```
 ANALYZE (L1) → SCAN (L0) → GENERATE (L1) → VALIDATE (L0) → CONFIRM (L1)
     │              │              │                │               │
-  Skill plan   Code samples   Skill files    Validation     approved/revise
+  Skill plan   Code samples   SKILL.md        Validation     approved/revise
+  + CLAUDE.md                 + openai.yaml
+  modules                     + CLAUDE.md
 ```
 
 | Phase | Executor | Input | Output | Gate |
 |------|:------:|------|------|------|
 | ANALYZE | Sonnet (L1) | Project overview | Skill plan: `[{name, tier, reason}]` | **Pause for user confirmation** |
 | SCAN | **Haiku (L0)** | Skill plan → codebase | Code samples per layer | All layers scanned |
-| GENERATE | Sonnet (L1) | Scan results | SKILL.md + openai.yaml + references/ | 8 hard rules met |
+| GENERATE | Sonnet (L1) | Scan results | SKILL.md + openai.yaml + CLAUDE.md + references/ | 10 hard rules met |
 | VALIDATE | **Haiku (L0)** | Generated files | Pass/Fail report | V1+V2 passed |
 | CONFIRM | Sonnet (L1) | Validated skills | approved / revise / reject | User explicit response |
 
 ### 2.2 ANALYZE — Project Analysis
 
 - **Executor**: Sonnet (L1). Analyze project type, tech stack, module structure, team size.
-- **Output**: Skill plan in `[{name, skill_tier, model_tier, reason}]` format.
+- **Output**: Skill plan in `[{name, skill_tier, model_tier, reason}]` format + CLAUDE.md module selection `{modules: ["M1", ...]}` per project profile (see `references/claude-md-spec.md` §4).
 - **Gate**: Pause for user confirmation. Do NOT proceed to SCAN without approval.
 - **Reference**: `references/pipeline/phase-0-example.md` — granularity benchmark (NestJS).
 
@@ -152,7 +157,7 @@ ANALYZE (L1) → SCAN (L0) → GENERATE (L1) → VALIDATE (L0) → CONFIRM (L1)
 ### 2.4 GENERATE — Create Skill Files
 
 - **Executor**: Sonnet (L1).
-- **Output**: SKILL.md + openai.yaml → `.claude/skills/{name}/` (production) or `skills/{name}/` (template).
+- **Output**: SKILL.md + openai.yaml + CLAUDE.md → `.claude/skills/{name}/` (production) or `skills/{name}/` (template).
 
 **Hard rules**:
 1. Frontmatter: name, description, model_tier, skill_tier, version, status (`references/frontmatter-spec.md`)
@@ -164,13 +169,14 @@ ANALYZE (L1) → SCAN (L0) → GENERATE (L1) → VALIDATE (L0) → CONFIRM (L1)
 7. Progressive loading: functional-tier skills (workflow, change-model, call-chain) MUST create `references/` for content exceeding the L2 body budget. If the skill body approaches 5000t, split detailed templates/methodologies into `references/`. Atomic-tier skills (dev, code-map, scripts) may omit references/ if the lookup table fits in the body.
 8. Load methodology for the skill type: when generating a skill of type X, load the corresponding L3 reference first (`references/change-model.md` for change-model skills, `references/execution-tree.md` for delegation skills). The generated skill must reflect the current naming conventions and patterns from its reference.
 9. Completeness checklist: before delivering generated skills, verify all items in §2.4.1.
+10. CLAUDE.md generation: load `references/claude-md-spec.md`. Fixed skeleton (A-D) always present. Optional modules (M1-M6) selected during ANALYZE per project profile (§2.2). Data sourced from SCAN results, not re-collected.
 
 **Language**: Concise English. Trigger words match project language.
 **Reference**: `references/pipeline/phase-3-generate.md` — per-skill-type generation prompts.
 
 **Naming disambiguation**: Risk levels in change-model skills use R0-R3 (not L0-L3, which are execution tiers). See `references/change-model.md` §3.2.
 
-**Gate**: ☐ All 9 hard rules passed? ☐ Completeness checklist (§2.4.1) all ✅?
+**Gate**: ☐ All 10 hard rules passed? ☐ Completeness checklist (§2.4.1) all ✅? ☐ CLAUDE.md generated with correct module set?
 
 #### 2.4.1 Completeness Checklist
 
@@ -184,7 +190,10 @@ Before delivering generated skills, verify every item:
 - [ ] **Technical accuracy**: version numbers, class names, file paths, and dependency labels verified against target project source (not assumed or approximated)
 - [ ] **Trigger words**: 5-15 per skill, project-specific (no generic terms like "develop" or "modify")
 - [ ] **No placeholders**: every `{placeholder}` replaced with actual content from scan
-- [ ] **Token budget**: each SKILL.md ≤5000 tokens
+- [ ] **Token budget**: each SKILL.md ≤5000 tokens; CLAUDE.md ≤1500 tokens
+- [ ] **CLAUDE.md modules**: selected during ANALYZE, data sourced from SCAN (not re-collected)
+- [ ] **CLAUDE.md quick commands**: each command copy-paste executable, no placeholders
+- [ ] **CLAUDE.md skill routing**: matches generated skills one-to-one
 
 ### 2.5 VALIDATE — Verify
 
@@ -200,6 +209,7 @@ python scripts/validate-skills.py skills/{name}
 | V1 Format | Frontmatter complete, triggers ≥5, YAML valid, no forbidden fields |
 | V2 Structure | Dual-axis consistent, skill references exist, relative paths correct |
 | V3 Semantic | File paths ≥95%, method names ≥90%, version numbers 100% — run with `--semantic` |
+| V4 CLAUDE.md | Quick commands executable, skill routing consistent, tech stack versions match SCAN, zero placeholders (see `references/claude-md-spec.md` §6) |
 
 **Acceptance criteria**:
 
@@ -211,7 +221,7 @@ python scripts/validate-skills.py skills/{name}
 
 Below standard → must not publish. Verify with tools, not by trusting documents.
 **Reference**: `references/validation-protocol.md` — full protocol.
-**Gate**: ☐ V1+V2 passed? ☐ V3 semantic passed (if available)? ☐ Zero broken cross-references?
+**Gate**: ☐ V1+V2 passed? ☐ V3 semantic passed (if available)? ☐ V4 CLAUDE.md passed? ☐ Zero broken cross-references?
 
 ### 2.6 CONFIRM — User Approval
 
@@ -230,7 +240,8 @@ Load deeper methodology only when the corresponding phase or scenario triggers i
 |------|------|------|
 | Phase 1 ANALYZE | `references/pipeline/phase-0-example.md` | NestJS end-to-end example |
 | Phase 2 SCAN | `references/pipeline/phase-2-scan.md` | Project type → layer mapping |
-| Phase 3 GENERATE | `references/pipeline/phase-3-generate.md` | Per-skill-type generation prompts |
+| Phase 3 GENERATE (skills) | `references/pipeline/phase-3-generate.md` | Per-skill-type generation prompts |
+| Phase 3 GENERATE (CLAUDE.md) | `references/claude-md-spec.md` | Modular architecture, behavioral constitution, module selection matrix |
 | Phase 4 VALIDATE | `references/validation-protocol.md` | V1/V2/V3 specs, pass rates |
 | Filling frontmatter | `references/frontmatter-spec.md` | Required/forbidden/removed fields |
 | Task decomposition, execution tree, delegation patterns | `references/execution-tree.md` | H-ADMC criteria, AND/OR/LEAF nodes, patterns A/B/C, C/B/U format |
@@ -266,33 +277,30 @@ Trigger: user says "review the generated skills" / "evaluate the skill system" /
 
 Naming: `{project}-{type}`, lowercase, hyphen-separated. Dir name = skill name.
 
-### 3.2 CLAUDE.md Integration
+### 3.2 CLAUDE.md — Modular Architecture
 
-**Version A: `.claude/skills/` (Recommended — Auto-Load)**
+CLAUDE.md is a **formal Phase 3 output**, generated alongside SKILL.md + openai.yaml. It serves two roles: (1) shape Agent behavior toward the user, (2) cache high-frequency project data to avoid repeated L0 lookups.
 
-```markdown
-# {Project}
-## Mandatory Delegation Rules
-Main model must not execute L0 tasks. File ops → Haiku.
+**Architecture**: fixed skeleton + optional modules, selected during ANALYZE per project profile.
 
-## Skills
-> Auto-loaded from `.claude/skills/`, supports `/skill-name`.
-| Skill | Execution | Composition | Purpose |
-|------|:------:|:------:|------|
-| {project}-dev | L1 | atomic | Tech stack, standards |
-| {project}-code-map | **L0** | atomic | File location [Haiku] |
-```
+| Section | Type | Content |
+|------|------|------|
+| A. Project Identity | Fixed | 1-line description |
+| B. Behavioral Constitution | Fixed | 4 proactivity rules — propose→review, discover→report, change→test, complete→archive |
+| C. Skill Routing | Fixed | Auto-loaded skill index |
+| D. Quick Commands | Fixed | build / run / test (from SCAN) |
+| M1. Tech Stack | Default on | Versions from dependency config |
+| M2. Key Directories | Optional | 5-10 dirs, ≥3 modules trigger |
+| M3. Architecture Overview | Optional | Layer/data flow, complex projects trigger |
+| M4. Coding Constraints | Optional | Non-obvious rules, non-standard patterns trigger |
+| M5. Domain Glossary | Optional | ≥5 project-specific terms trigger |
+| M6. External Dependencies | Optional | ≥3 external services trigger |
 
-Routing table optional — skills auto-load. Include for documentation.
+**Behavioral Constitution** (Section B) encodes human-facing proactivity — the Agent defaults to proposing plans for review, reporting findings, testing changes, and offering change reports. These are cross-skill default behaviors, orthogonal to skill-specific instructions.
 
-**Version B: `skills/` (Explicit Routing Required)**
+Full specification: `references/claude-md-spec.md` — generation rules, data source mapping, validation checklist.
 
-```markdown
-## Skill Routing Table (Required)
-| Skill | Execution | Composition | Trigger |
-|------|:------:|:------:|------|
-| [dev](skills/{project}-dev/) | L1 | atomic | Tech stack, code standards |
-```
+Placement: `.claude/skills/` projects use `CLAUDE.md` at project root (auto-loaded). `skills/` projects embed the skill routing table within the generated SKILL.md instead.
 
 ### 3.3 Conflict Resolution
 

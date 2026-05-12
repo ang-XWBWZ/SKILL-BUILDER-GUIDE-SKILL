@@ -10,6 +10,9 @@ version: 1.2.0
 status: active
 ---
 
+> *知人者智，自知者明。* ——《道德经》
+> 把对的任务交给对的模型，不是省 token，是尊重每一层的能力边界。
+
 # Delegation Rules Skill Template
 
 > **Position**: Atomic tier / L1 execution tier — a **reference template** for other projects to create project-level delegation rules. Composed by [skill-builder-guide](../../SKILL.md) (meta).
