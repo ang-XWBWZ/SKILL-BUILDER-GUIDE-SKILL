@@ -30,6 +30,7 @@ status: active
 ## Related Skills
 
 - [{Related Skill}](../{skill-path}/SKILL.md) — purpose
+- 全局技能（`~/.claude/skills/`）可能已有相关功能，用 `/skills` 查看
 
 ---
 
@@ -43,7 +44,15 @@ status: active
 
 {content}
 
-## 3. Model Tier
+## Handoff
+
+After completing this skill, recommend the next skill based on output characteristics:
+
+| Condition | Recommend |
+|-----------|-----------|
+| {measurable condition} | `{project}-{skill_name}` |
+
+## Model Tier
 
 **L{N} — {Model} / {tier} tier**: {reason}
 ```

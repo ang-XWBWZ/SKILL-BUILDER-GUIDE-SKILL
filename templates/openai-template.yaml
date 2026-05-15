@@ -11,7 +11,7 @@
 ```yaml
 interface:
   display_name: "L{N} — {project}-{skill-type}"
-  short_description: "L{N} — {one-line description}"
+  short_description: "L{N} — {one-line description}. Use when {specific trigger scenarios}."
   default_prompt: "Use {project}-{skill-type} to {purpose}"
 policy:
   allow_implicit_invocation: false

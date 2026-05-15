@@ -77,6 +77,14 @@ status: active
 
 ---
 
+## Handoff
+
+After completing this skill, recommend the next skill based on output characteristics:
+
+| Condition | Recommend |
+|-----------|-----------|
+| Need coding conventions | `{project}-dev` |
+
 ## 4. Model Tier
 
 **L0 — Haiku / atomic tier**: Pure file path lookup, zero reasoning required. Main model must not directly execute this skill — **must delegate to Haiku**.

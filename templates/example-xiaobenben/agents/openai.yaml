@@ -1,0 +1,13 @@
+interface:
+  display_name: "L0 — 小本本"
+  short_description: "L0 — Records user dissatisfaction and satisfaction moments during agent interaction. Use when user expresses anger, frustration, or strong satisfaction."
+  default_prompt: "Record this moment in xiaobenben"
+policy:
+  allow_implicit_invocation: true
+triggers:
+  - 用户不满
+  - 用户愤怒
+  - 用户辱骂
+  - 用户满意
+  - 情绪记录
+  - 小本本

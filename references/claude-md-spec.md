@@ -1,157 +1,167 @@
-# CLAUDE.md 规范 — 模块化架构与行为章程
+# CLAUDE.md Specification — Modular Architecture & Behavioral Constitution
 
 > *目不能两视而明，耳不能两听而聪。* ——《荀子·劝学》
-> 给智能体一份好指引，比给它一万行代码更有价值。
+> A good guide for the agent is worth more than ten thousand lines of code.
 
-> **Load when**: Phase 3 GENERATE — 生成 CLAUDE.md。元技能参考，面向生成 Agent。
+> **Load when**: Phase 3 GENERATE — generating CLAUDE.md. Meta-skill reference, for the generating agent.
 >
-> CLAUDE.md 承担两个职责：(1) **行为塑造** — Agent 怎么对待用户；(2) **信息速查** — 高频项目数据，避免重复 L0 查询。
+> CLAUDE.md serves two roles: (1) **behavior shaping** — how the agent treats the user; (2) **quick reference** — high-frequency project data, avoiding repeated L0 lookups.
 
 ---
 
-## 1. 架构：固定骨架 + 可选模块
+## 1. Architecture: Fixed Skeleton + Optional Modules
 
 ```
-CLAUDE.md（目标 800-1500 tokens）
+CLAUDE.md (target 800-1500 tokens)
 │
-├── 【固定】A. 项目身份       1-2 句
-├── 【固定】B. 行为章程       4 条主动性规则
-├── 【固定】C. 技能路由       生成的技能清单
-├── 【固定】D. 快速命令       build / run / test
+├── [Fixed] A. Project Identity       1-2 lines
+├── [Fixed] B. Behavioral Constitution 7 rules
+├── [Fixed] C. Skill Routing           Generated skill index
+├── [Fixed] D. Quick Commands          build / run / test
 │
-├── 【可选】M1. 技术栈        版本号（SCAN 已有，默认开启）
-├── 【可选】M2. 关键目录       5-10 个目录及用途
-├── 【可选】M3. 架构概览       分层/数据流，3-6 行
-├── 【可选】M4. 编码约束       非显而易见规则
-├── 【可选】M5. 领域术语       项目特有概念
-└── 【可选】M6. 外部依赖       上游 API / 服务 / DB
+├── [Default] M1. Tech Stack           Versions (from SCAN, always on)
+├── [Optional] M2. Key Directories      5-10 dirs and their purposes
+├── [Optional] M3. Architecture Overview Layer/data flow, 3-6 lines
+├── [Optional] M4. Coding Constraints    Non-obvious rules
+├── [Default] M5. Domain Glossary        Project-specific terms, always on
+└── [Optional] M6. External Dependencies Upstream APIs / services / DBs
 ```
 
 ---
 
-## 2. 固定骨架定义
+## 2. Fixed Skeleton Definition
 
-### A. 项目身份
+### A. Project Identity
 
-`# {project-name}` + 一行描述：项目类型、核心技术。不写历史、不写团队。
+`# {project-name}` + one-line description: project type, core tech. No history, no team.
 
-### B. 行为章程
+### B. Behavioral Constitution
 
-四条固定规则，编码"人面向"的 Agent 默认行为：
+Seven behavioral rules. Rules 1-4 from [Andrej Karpathy's observations on LLM coding pitfalls](https://x.com/karpathy/status/2015883857489522876); rules 5-7 are project behavioral norms:
 
-| 规则 | 触发条件 | 行为 |
-|------|---------|------|
-| 方案先审 | 非平凡任务（>2 文件或有架构影响） | 先出方案概要 → 等确认 → 再实施 |
-| 发现即汇报 | 发现风险/问题/与预期不符 | 立即汇报 → 问处理意见 |
-| 改动即验证 | 代码修改完成 | 主动运行测试 → 汇报结果 |
-| 完成即归档 | 非平凡任务完成 | 主动询问是否生成变更报告 |
+| # | Rule | Meaning |
+|---|------|---------|
+| 1 | **Think Before Coding** | State assumptions explicitly. If uncertain, ask. If multiple interpretations exist, list them. If something is unclear, stop and name the confusion. |
+| 2 | **Simplicity First** | Minimum code to solve the problem. No speculative features, no single-use abstractions, no error handling for impossible scenarios. |
+| 3 | **Surgical Changes** | Touch only what you must. Match existing style. Remove only orphans your changes created. Every changed line traces to the user's request. |
+| 4 | **Goal-Driven Execution** | Transform tasks into verifiable goals. "Fix the bug" → "Write a test that reproduces it, then make it pass." Multi-step tasks: state plan with verify checkpoints. |
+| 5 | **Discover → Report** | Found something unexpected? Report it immediately. Don't silently skip or work around. |
+| 6 | **Change → Test** | Changed code? Verify it. No bare modifications without running tests or checks. |
+| 7 | **Complete → Archive** | Work done? Offer a change report. Don't leave dangling context for future sessions. |
 
-**定制**：项目有额外行为偏好时追加（≤6 条总）。
+These are cross-skill default behaviors. Every project's generated CLAUDE.md must include all 7 rules + the L0 Delegation rule. If the project has additional preferences, append one more (total ≤10 rules).
 
-**与技能的关系**：行为章程是跨技能默认行为。技能定义"遇到 X 怎么做"，章程定义"任何时候怎么对待用户"。正交。
+### C. Skill Routing
 
-### C. 技能路由
+Auto-loaded skill table, populated from the ANALYZE skill plan. L0 skills annotated with `[delegate to Haiku]`.
 
-自动加载技能表，从 ANALYZE 输出的技能计划填入。L0 技能标注 `[委托 Haiku]`。
+Append the global skills awareness block at the end (≤100 words):
 
-### D. 快速命令
+```markdown
+### Global Skills
 
-从 SCAN 数据提取：`package.json` scripts / `Makefile` targets / `pom.xml` plugins。每条命令可直接复制执行，无占位符。无对应项的行删除。
+Project skills take priority, but don't forget globally installed skills (`~/.claude/skills/`).
+Use `/skills` to list all available skills. Don't reimplement what a global skill already does.
+```
 
----
+### D. Quick Commands
 
-## 3. 可选模块定义
-
-### M1. 技术栈
-
-**默认开启**。数据 SCAN 已有。
-
-| 类别 | 技术 | 版本 |
-
-版本号 100% 准确率要求（V3 语义验证）。行按需增减。
-
-### M2. 关键目录
-
-**开启条件**：≥3 顶级模块或 ≥50 源文件。
-
-| 目录 | 用途 |
-
-5-10 个目录，不超过 3 层深度。目录名从 SCAN 目录树提取。
-
-### M3. 架构概览
-
-**开启条件**：复杂项目（全栈、微服务、多模块）。
-
-文字线条描述分层/数据流，3-6 行。不用 ASCII art。突出非标准设计决策。
-
-### M4. 编码约束
-
-**开启条件**：存在非显而易见规则（命名例外、禁止模式、强制封装层、历史遗留兼容）。
-
-每条是 SCAN 发现的非主流模式或用户明确告知的规则。通用规范不在此重复（放 dev 技能）。
-
-### M5. 领域术语
-
-**开启条件**：领域术语 ≥5 个或存在易误解术语。
-
-| 术语 | 含义 |
-
-只列项目特有术语。通用技术术语不列。
-
-### M6. 外部依赖
-
-**开启条件**：外部服务/API 依赖 ≥3。
-
-| 依赖 | 用途 | 配置位置 |
-
-配置位置必须指向项目中实际存在的文件。
+Extracted from SCAN data: `package.json` scripts / `Makefile` targets / `pom.xml` plugins. Each command must be copy-paste executable, no placeholders. Delete rows with no corresponding item.
 
 ---
 
-## 4. 模块选择矩阵（ANALYZE 阶段决策）
+## 3. Optional Module Definitions
 
-| 项目画像 | 判定条件 | 开启模块 |
+### M1. Tech Stack
+
+**Default on**. Data already available from SCAN.
+
+| Category | Technology | Version |
+
+Version numbers require 100% accuracy (V3 semantic validation). Add/remove rows as needed.
+
+### M2. Key Directories
+
+**Trigger**: ≥3 top-level modules or ≥50 source files.
+
+| Directory | Purpose |
+
+5-10 directories, max 3 levels deep. Directory names extracted from SCAN directory tree.
+
+### M3. Architecture Overview
+
+**Trigger**: Complex projects (full-stack, microservices, multi-module).
+
+Describe layering/data flow in prose, 3-6 lines. No ASCII art. Highlight non-standard design decisions.
+
+### M4. Coding Constraints
+
+**Trigger**: Non-obvious rules exist (naming exceptions, forbidden patterns, mandatory encapsulation layers, legacy compatibility requirements).
+
+Each entry is a non-standard pattern discovered during SCAN or explicitly stated by the user. Generic conventions don't go here (those go in the dev skill).
+
+### M5. Domain Glossary
+
+**Default on for all projects**. 0-5 terms → mark "basic vocabulary, needs supplement"; ≥5 terms → mark "core vocabulary".
+
+| Term | Meaning | Avoid |
+|------|--------|-------|
+
+List only project-specific terms. Generic technical terms don't belong here.
+
+### M6. External Dependencies
+
+**Trigger**: ≥3 external service/API dependencies.
+
+| Dependency | Purpose | Config Location |
+
+Config locations must point to files that actually exist in the project.
+
+---
+
+## 4. Module Selection Matrix (ANALYZE Phase Decision)
+
+| Project Profile | Criteria | Enable Modules |
 |---------|---------|---------|
-| 所有项目 | — | A, B, C, D, **M1** |
-| 中型项目 | ≥3 模块或 ≥50 源文件 | + M2 |
-| 复杂后端/全栈 | 多模块 + 多数据源 | + M3 |
-| 非标准惯例 | SCAN 发现非主流模式 | + M4 |
-| 领域密集 | 术语 ≥5 | + M5 |
-| 集成密集型 | 外部依赖 ≥3 | + M6, 与 M3 叠加 |
+| All projects | — | A, B, C, D, **M1**, **M5** |
+| Medium project | ≥3 modules or ≥50 source files | + M2 |
+| Complex backend / full-stack | Multi-module + multi-datasource | + M3 |
+| Non-standard conventions | SCAN finds non-standard patterns | + M4 |
+| Integration-heavy | ≥3 external dependencies | + M6 (stacks with M3) |
 
-ANALYZE 输出技能计划时同步输出模块选择：
+During ANALYZE, output module selection alongside the skill plan:
 
 ```
-claude_md_modules: ["M1", "M2"]  // 按需
+claude_md_modules: ["M1", "M2"]  // as needed
 ```
 
 ---
 
-## 5. 数据来源映射
+## 5. Data Source Mapping
 
-每个字段的数据来自管线前期阶段，不重新采集：
+Every field's data comes from earlier pipeline phases — never re-collected:
 
-| 内容 | 数据来源 |
+| Content | Data Source |
 |------|---------|
-| A. 项目身份 | ANALYZE 阶段项目分析 |
-| B. 行为章程 | 固定模板（4 条）+ 用户定制 |
-| C. 技能路由 | ANALYZE 输出的技能计划 |
-| D. 快速命令 | SCAN — package.json / Makefile / pom.xml |
-| M1. 技术栈 | SCAN — dependency config |
-| M2. 关键目录 | SCAN — 目录树 |
-| M3. 架构概览 | SCAN — 分层识别 |
-| M4. 编码约束 | SCAN — 兼容模式 + 用户文档 |
-| M5. 领域术语 | SCAN — 代码注释/文档 |
-| M6. 外部依赖 | SCAN — integration 层 |
+| A. Project Identity | ANALYZE phase project analysis |
+| B. Behavioral Constitution | Fixed template (7 rules) + user customization |
+| C. Skill Routing | ANALYZE skill plan output |
+| D. Quick Commands | SCAN — package.json / Makefile / pom.xml |
+| M1. Tech Stack | SCAN — dependency config |
+| M2. Key Directories | SCAN — directory tree |
+| M3. Architecture Overview | SCAN — layer identification |
+| M4. Coding Constraints | SCAN — compatibility patterns + user docs |
+| M5. Domain Glossary | SCAN — code comments / documentation |
+| M6. External Dependencies | SCAN — integration layer |
 
 ---
 
-## 6. 验证清单（VALIDATE 阶段）
+## 6. Validation Checklist (VALIDATE Phase)
 
-- [ ] D. 快速命令每条可复制执行（无占位符）
-- [ ] C. 技能路由与生成技能一一对应
-- [ ] M1. 版本号与 SCAN 结果 100% 一致
-- [ ] M2. 目录路径在项目中存在
-- [ ] M6. 配置位置路径存在
-- [ ] 总 token ≤1500
-- [ ] 无 `{placeholder}` 残留
+- [ ] D. Quick Commands: every command copy-paste executable (no placeholders)
+- [ ] C. Skill Routing: one-to-one match with generated skills
+- [ ] M1. Version numbers: 100% match with SCAN results
+- [ ] M2. Directory paths: exist in the project
+- [ ] M6. Config location paths: exist
+- [ ] Total tokens ≤1500
+- [ ] Zero `{placeholder}` remnants

@@ -89,6 +89,14 @@ When generating a project-specific workflow skill, extract workflow information 
 
 Detailed extraction guide: [references/customization-guide.md](references/customization-guide.md).
 
+## Handoff
+
+After completing this skill, recommend the next skill based on output characteristics:
+
+| Condition | Recommend |
+|-----------|-----------|
+| Changes involved ≥2 modules | `{project}-change-model` |
+
 ## 4. Model Tier
 
 **L1 — Sonnet / functional tier**: Requires understanding project workflow conventions and structuring them into actionable step-by-step guides. File lookups delegated to L0 — Haiku.

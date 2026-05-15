@@ -1,155 +1,188 @@
-# Phase 3: GENERATE — 生成技能文件
+# Phase 3: GENERATE — Create Skill Files
 
 > *梓匠轮舆，能与人规矩，不能使人巧。* ——《孟子·尽心下》
-> 生成不是填空，是把扫描看到的真实，翻译成技能能用的语言。
+> Generation isn't fill-in-the-blanks. It's translating what the scan saw into language a skill can use.
 
-## 生成规则
+## Generation Rules
 
-- **执行者**: Sonnet (L1)
-- **输入**: Phase 1 技能规划 + Phase 2 扫描报告 + 匹配的模板
-- **输出**: 技能文件。默认输出到 `.claude/skills/{name}/`（自动加载），模板/参考技能输出到 `skills/{name}/`（不自动加载）
+- **Executor**: Sonnet (L1)
+- **Input**: Phase 1 skill plan + Phase 2 scan report + matching template
+- **Output**: Skill files. Default output to `.claude/skills/{name}/` (auto-loaded), template/reference skills to `skills/{name}/` (not auto-loaded)
 
-### 输出路径选择
+### Output Path Selection
 
-| 目标 | 输出路径 | 说明 |
+| Target | Output Path | Notes |
 |------|---------|------|
-| 生产项目专属技能 | `.claude/skills/{name}/` | 自动加载 + `/skill` 命令 |
-| 模板/参考技能 | `skills/{name}/` | 不自动加载，供方法论参考 |
+| Production project-specific skill | `.claude/skills/{name}/` | Auto-loaded + `/skill` command |
+| Template/reference skill | `skills/{name}/` | Not auto-loaded, for methodology reference |
 
-## 生成 Prompt 模板
+## Generation Prompt Template
 
 ```
 Agent(
-  description: "生成{技能类型}技能文件",
+  description: "Generate {skill_type} skill files",
   model: "sonnet",
   prompt: """
-    【任务】为 {project_name} 生成专属的 {skill_type} 技能文件
+    【Task】Generate project-specific {skill_type} skill files for {project_name}
     
-    【技能规划】
-    - 技能名: {skill_name}
-    - 执行层: {model_tier}
-    - 组合层: {skill_tier}
-    - 创建理由: {reason}
+    【Skill Plan】
+    - Skill name: {skill_name}
+    - Execution tier: {model_tier}
+    - Composition tier: {skill_tier}
+    - Rationale: {reason}
     
-    【代码扫描结果】
+    【Code Scan Results】
     {scan_results}
     
-    【参照模板】
+    【Reference Template】
     {template_content}
     
-    【生成要求】
-    1. frontmatter 按 frontmatter-spec.md 填写完整（含双轴字段）
-    2. 触发词从项目实际术语中提取（5-15个，覆盖操作类+询问类）
-    3. 技术栈表填入扫描到的实际版本号（不得使用占位符）
-    4. 代码示例使用扫描到的实际代码片段（脱敏后）
-    5. 关联技能使用相对路径引用
-    6. SKILL.md 正文 ≤ 5000 tokens
-    7. openai.yaml 的 short_description 标注模型等级
+    【Generation Requirements】
+    1. Complete frontmatter per frontmatter-spec.md (including dual-axis fields)
+    2. Trigger words extracted from project's actual terminology (5-15, covering action + query types)
+    3. Tech stack table: actual versions from scan (no placeholders)
+    4. Code examples: use actual scanned code snippets (sanitized)
+    5. Related skills: use relative path references
+    6. SKILL.md body ≤ 5000 tokens
+    7. openai.yaml short_description labels model tier
     
-    【输出格式】
-    完整 SKILL.md 内容 + 完整 openai.yaml 内容
+    【Output Format】
+    Complete SKILL.md content + complete openai.yaml content
   """
 )
 ```
 
-## 各技能类型生成要点
+## Per-Skill-Type Generation Guidelines
 
-### 规范技能 (dev)
+### Standards Skill (dev)
 
-- 技术栈表：填入 `package.json` / `pom.xml` / `requirements.txt` 中的实际版本
-- 分层架构：根据扫描结果定制四层结构（项目可能只有三层或无集成层）
-- 命名规范：从扫描样本中归纳实际命名模式，给出 3+ 个具体示例
-- 兼容写法：记录扫描中发现的非主流写法及原因
+- Tech stack table: actual versions from `package.json` / `pom.xml` / `requirements.txt`
+- Layered architecture: customize four-layer structure from scan results (project may have 3 layers or no integration layer)
+- Naming conventions: infer actual naming patterns from scan samples, provide 3+ concrete examples
+- Compatibility patterns: record non-standard patterns found during scan and their reasons
 
-### 代码地图 (code-map)
+### Code Map (code-map)
 
-- 目录结构：使用 `find` / `tree` 输出，仅保留关键目录（≤3层深）
-- 快速定位表：每个入口至少给出一个具体的文件匹配模式
-- 路由映射表：从路由配置文件/注解中提取，列出实际路由
-- 组件清单：列出 ≥80% 的顶层组件/模块
+- Directory structure: use `find` / `tree` output, keep only key directories (≤3 levels deep)
+- Quick lookup table: at least one specific file-match pattern per entry point
+- Route mapping table: extract from route config files/annotations, list actual routes
+- Component inventory: list ≥80% of top-level components/modules
 
-### 变更模型 (change-model)
+### Change Model (change-model)
 
-- 调用链路模板：使用项目实际的层命名（如 Controller→Service→Repository）
-- 风险等级定义：根据项目实际调整 R0-R3 的风险阈值（注意：风险等级用 R0-R3，执行层级用 L0-L3，两者不同）
-- 存档路径：确认 `docs/changes/` 在项目中是否已存在，如存在则沿用
-- 示例：使用项目实际的一个简单变更作为填充示例
+- Call chain template: use project's actual layer names (e.g., Controller→Service→Repository)
+- Risk level definitions: adjust R0-R3 thresholds to fit the project (note: risk levels use R0-R3, execution tiers use L0-L3 — they are different)
+- Archive path: check if `docs/changes/` already exists in the project; reuse if present
+- Example: fill in one simple real change from the project as a worked example
 
-### 分治驱动 (delegation)
+### Delegation (delegation)
 
-- L0 任务清单：根据项目技术栈扩充（如"查 Maven 依赖版本"）
-- 下放格式：保持通用格式，增加项目特定的路径/配置示例
+- L0 task catalog: expand with project-specific tasks (e.g., "check Maven dependency version")
+- Dispatch format: keep generic format, add project-specific path/config examples
 
-## CLAUDE.md 生成
+## Quick-Start Path
 
-CLAUDE.md 与 SKILL.md、openai.yaml 并列生成。规范见 `references/claude-md-spec.md`。
+When the user says "quick start" / "先跑起来" / "just get me running", skip deep scan and validation. 3 steps, ≤5 minutes:
 
-**生成 Prompt 模板**：
+1. **Grab key data** — don't run full SCAN. Extract versions from package.json/pom.xml/go.mod, top 3 directory levels, find entry points
+2. **Fill templates** — populate template placeholders with extracted data. Don't chase deep patterns
+3. **Deliver + remind** — deliver generated files directly, with the note: "Validation skipped. Consider running `python scripts/validate-skills.py .claude/skills/{name} --semantic`"
+
+Full decision logic: `references/decision-guide.md`.
+
+## Handoff Section Generation
+
+Each generated SKILL.md must include a `## Handoff` section at the end. Generation rules:
+
+1. **Source**: Select the matching row from SKILL.md §1.5 Skill Chains table based on the current skill type
+2. **Project-specific**: Replace `{project}-` prefix with the actual project name
+3. **Discriminable conditions**: Trigger conditions must be measurable ("new files ≥3", not "if needed")
+4. **Max 3 entries**: More than 3 suggests unclear skill boundaries
+5. **Format**:
+
+```markdown
+## Handoff
+
+After completing this skill, recommend the next skill based on output characteristics:
+
+| Condition | Recommend |
+|-----------|-----------|
+| {measurable condition} | `{project}-{skill_name}` |
+```
+
+Full methodology: `references/skill-chain.md`.
+
+## CLAUDE.md Generation
+
+CLAUDE.md is generated alongside SKILL.md + openai.yaml. Specification: `references/claude-md-spec.md`. Ensure §C includes the global skills awareness block (≤100 words, see `references/global-skills-awareness.md`).
+
+**Generation Prompt Template**:
 
 ```
 Agent(
-  description: "生成 CLAUDE.md",
+  description: "Generate CLAUDE.md",
   model: "sonnet",
   prompt: """
-    【任务】为 {project_name} 生成 CLAUDE.md
+    【Task】Generate CLAUDE.md for {project_name}
 
-    【模块选择】{claude_md_modules}（ANALYZE 阶段决策）
+    【Module Selection】{claude_md_modules} (decided during ANALYZE phase)
 
-    【数据来源】
-    - 项目身份: {analalyze_result}
-    - 技能计划: {skill_plan}
-    - 快速命令: SCAN — {build_config_file}
-    - 技术栈: SCAN — {dependency_config}
-    - 目录结构: SCAN — {directory_tree}
-    - 分层架构: SCAN — {layer_identification}
-    - 兼容模式: SCAN — {compatibility_patterns}
-    - 外部依赖: SCAN — {integration_layer}
+    【Data Sources】
+    - Project identity: {analyze_result}
+    - Skill plan: {skill_plan}
+    - Quick commands: SCAN — {build_config_file}
+    - Tech stack: SCAN — {dependency_config}
+    - Directory structure: SCAN — {directory_tree}
+    - Layer architecture: SCAN — {layer_identification}
+    - Compatibility patterns: SCAN — {compatibility_patterns}
+    - External dependencies: SCAN — {integration_layer}
 
-    【生成要求】
-    1. 固定骨架 A-D 全部填入（项目身份、行为章程、技能路由、快速命令）
-    2. 行为章程使用固定 4 条 + 项目定制规则（如有）
-    3. 快速命令从 SCAN 的 package.json/Makefile/pom.xml 提取，每条可直接复制执行
-    4. 可选模块按 ANALYZE 决策的列表填入，未选中的不生成
-    5. 所有数据从 SCAN 结果填入，不重新采集
-    6. 总 token ≤1500
-    7. 零占位符残留
+    【Generation Requirements】
+    1. Fixed skeleton A-D all filled in (project identity, behavioral constitution, skill routing, quick commands)
+    2. Behavioral constitution: use the fixed 7 rules + project custom rules (if any)
+    3. Quick commands extracted from SCAN package.json/Makefile/pom.xml, each copy-paste executable
+    4. Optional modules filled per ANALYZE decision list; skip unselected modules
+    5. All data from SCAN results, never re-collected
+    6. Total tokens ≤1500
+    7. Zero placeholder remnants
 
-    【输出格式】完整 CLAUDE.md 内容
+    【Output Format】Complete CLAUDE.md content
   """
 )
 ```
 
-**模块选择参照**：
+**Module Selection Reference**:
 
-| 项目画像 | 开启模块 |
+| Project Profile | Enable Modules |
 |---------|---------|
-| 所有项目 | M1（默认） |
-| ≥3 模块或 ≥50 源文件 | + M2 |
-| 全栈/微服务/多模块 | + M3 |
-| SCAN 发现非主流模式 | + M4 |
-| 领域术语 ≥5 | + M5 |
-| 外部依赖 ≥3 | + M6 |
+| All projects | M1, M5 (default) |
+| ≥3 modules or ≥50 source files | + M2 |
+| Full-stack / microservices / multi-module | + M3 |
+| SCAN found non-standard patterns | + M4 |
+| ≥3 external dependencies | + M6 |
 
-## 质量自检（与 SKILL.md §2.4.1 完整性清单同步）
+## Quality Self-Check (synced with SKILL.md §2.4.1 Completeness Checklist)
 
-生成完成后，在交付 Phase 4 验证之前，Sonnet 自检：
+After generation, before delivering to Phase 4 validation, Sonnet self-checks:
 
-- [ ] 所有 `{placeholder}` 已替换为实际内容
-- [ ] 技术栈版本号与扫描结果一致
-- [ ] 文件路径引用使用项目实际路径
-- [ ] 触发词不包含泛化词（如"开发"、"修改"），而是项目特定术语
-- [ ] 双轴字段 (model_tier, skill_tier) 已填写
-- [ ] 无禁止字段 (author/signature/contact/generated_by)
-- [ ] 关联技能使用相对路径引用，指向存在的目录
-- [ ] SKILL.md 正文 ≤ 5000 tokens
-- [ ] 渐进式加载：functional 层技能已创建 references/ 目录（如 body >3000t）
-- [ ] 模型分级：L0 技能 body 标注"must delegate to Haiku"；L1 技能标注 L0 委托点
-- [ ] 命名辨析：风险等级使用 R0-R3，执行层级使用 L0-L3
-- [ ] 已有规范：项目现有文档/变更日志/流程已被纳入或明确替换
-- [ ] 生成特定类型技能前已加载对应的 L3 reference
-- [ ] **CLAUDE.md**：固定骨架 A-D 全部填入
-- [ ] **CLAUDE.md**：模块选择与 ANALYZE 决策一致
-- [ ] **CLAUDE.md**：快速命令可复制执行，无占位符
-- [ ] **CLAUDE.md**：技术栈版本与 SCAN 结果 100% 一致
-- [ ] **CLAUDE.md**：技能路由与生成技能一一对应
-- [ ] **CLAUDE.md**：总 token ≤1500
+- [ ] All `{placeholder}` replaced with actual content
+- [ ] Tech stack versions match scan results
+- [ ] File path references use project's actual paths
+- [ ] Trigger words exclude generic terms (like "develop", "modify") — use project-specific terms
+- [ ] Dual-axis fields (model_tier, skill_tier) filled
+- [ ] No forbidden fields (author/signature/contact/generated_by)
+- [ ] Related skills use relative path references, pointing to existing directories
+- [ ] SKILL.md body ≤ 5000 tokens
+- [ ] Progressive loading: functional-tier skills have `references/` directory (if body >3000t)
+- [ ] Model delegation: L0 skill body states "must delegate to Haiku"; L1 skills note L0 delegation points
+- [ ] Naming disambiguation: risk levels use R0-R3, execution tiers use L0-L3
+- [ ] Existing conventions: project's existing docs/changelogs/workflows either incorporated or explicitly replaced
+- [ ] Loaded corresponding L3 reference before generating each skill type
+- [ ] **CLAUDE.md**: Fixed skeleton A-D all filled
+- [ ] **CLAUDE.md**: Module selection matches ANALYZE decision
+- [ ] **CLAUDE.md**: Quick commands copy-paste executable, no placeholders
+- [ ] **CLAUDE.md**: Tech stack versions 100% match SCAN results
+- [ ] **CLAUDE.md**: Skill routing one-to-one with generated skills
+- [ ] **CLAUDE.md**: Total tokens ≤1500
+- [ ] **Handoff section**: Each generated SKILL.md includes `## Handoff`, recommendations match §1.5 Skill Chains
+- [ ] **Handoff references**: Recommended skills in Handoff exist in the target project

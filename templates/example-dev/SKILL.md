@@ -251,6 +251,15 @@ See [references/code-scanning-guide.md](references/code-scanning-guide.md).
 
 ---
 
+## Handoff
+
+After completing this skill, recommend the next skill based on output characteristics:
+
+| Condition | Recommend |
+|-----------|-----------|
+| New files created ≥3 | `{project}-code-map` |
+| Non-standard directory structure found | `{project}-workflow` |
+
 ## 7. Model Tier
 
 **L1 — Sonnet / atomic tier**: Contains reasoning work such as standard interpretation, code analysis, and style extraction. Scan subtasks are dispatched to L0 — Haiku.

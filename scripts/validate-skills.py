@@ -3,6 +3,7 @@
 
 import os
 import sys
+import re
 import yaml  # requires: pip install pyyaml
 
 if sys.platform == "win32":
@@ -93,6 +94,26 @@ def validate_skill(skill_dir):
                     warnings.append("agents/openai.yaml: short_description 未标注模型等级 (L0/L1/L2/L3)")
         except yaml.YAMLError as e:
             errors.append(f"agents/openai.yaml: YAML 解析错误: {e}")
+
+    # 4. 检查 Handoff 段 (V2+)
+    skill_md_path = os.path.join(skill_dir, "SKILL.md")
+    if os.path.exists(skill_md_path):
+        with open(skill_md_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        body = content.split("---", 2)[2] if content.startswith("---") and len(content.split("---", 2)) >= 3 else content
+
+        if "## Handoff" not in body:
+            warnings.append("SKILL.md: 缺少 ## Handoff 段 — 建议添加以支持链式激活")
+        else:
+            # 检查 Handoff 中引用的技能是否存在
+            handoff_section = body.split("## Handoff")[1].split("\n## ")[0]
+            referenced_skills = re.findall(r'`(\w+-\w+)`', handoff_section)
+            for ref in referenced_skills:
+                # 在同目录的兄弟技能中查找
+                parent_dir = os.path.dirname(skill_dir)
+                ref_path = os.path.join(parent_dir, ref)
+                if not os.path.exists(ref_path):
+                    warnings.append(f"Handoff: 引用的技能 `{ref}` 在同目录下不存在")
 
     return skill_name, errors, warnings
 

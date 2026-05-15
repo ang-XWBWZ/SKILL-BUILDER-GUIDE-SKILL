@@ -1,6 +1,6 @@
 interface:
   display_name: "L1 — Skill Builder"
-  short_description: "L1 — AI Agent Skills creation methodology and pipeline"
+  short_description: "L1 — AI Agent Skills creation methodology and pipeline. Use when creating project-specific skills, generating SKILL.md files, setting up skill systems, understanding model tier delegation, or validating skill accuracy."
   default_prompt: "Use skill-builder to create or validate project-specific AI Agent skills"
 policy:
   allow_implicit_invocation: false
@@ -20,3 +20,5 @@ triggers:
   - skill builder
   - validate skill
   - skill directory
+  - quick skill
+  - setup skills

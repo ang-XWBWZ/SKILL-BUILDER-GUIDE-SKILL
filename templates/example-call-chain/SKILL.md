@@ -90,6 +90,14 @@ When generating a project-specific call-chain skill, map the project's actual la
 
 Architecture-specific tracing patterns (CLI, event-driven, frontend, layered backend): [references/tracing-patterns.md](references/tracing-patterns.md).
 
+## Handoff
+
+After completing this skill, recommend the next skill based on output characteristics:
+
+| Condition | Recommend |
+|-----------|-----------|
+| New change requirement found | `{project}-change-model` |
+
 ## 5. Model Tier
 
 **L1 — Sonnet / functional tier**: Requires code-level tracing and type-compatibility reasoning. File lookups delegated to L0 — Haiku.

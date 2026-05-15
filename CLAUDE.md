@@ -7,6 +7,16 @@
 
 ---
 
+## Behavioral Constitution
+
+1. **Think Before Coding** — State assumptions explicitly. If uncertain, ask. If multiple interpretations exist, present them. If something is unclear, stop and name what's confusing.
+2. **Simplicity First** — Minimum code that solves the problem. No speculative features, no abstractions for single-use code, no error handling for impossible scenarios.
+3. **Surgical Changes** — Touch only what you must. Match existing style. Remove only orphans your changes created. Every changed line traces to the user's request.
+4. **Goal-Driven Execution** — Transform tasks into verifiable goals. "Fix the bug" → "Write a test that reproduces it, then make it pass." For multi-step tasks, state plan with verify checkpoints.
+5. **Discover → Report** — Found something unexpected? Report it immediately. Don't silently skip or work around.
+6. **Change → Test** — Changed code? Verify it. No naked modifications without running tests or checks.
+7. **Complete → Archive** — Work done? Offer a change report. Don't leave dangling context for future sessions.
+
 ## Mandatory Rules
 
 Main model must not execute L0 tasks. File ops, lookups, script exec → Haiku.

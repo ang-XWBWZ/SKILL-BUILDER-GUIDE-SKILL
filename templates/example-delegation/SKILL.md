@@ -80,6 +80,14 @@ Main model does only three things after receiving: extract conclusions → ident
 
 **Upgrade info package**: Original requirements + attempted solutions and failure reasons + current blockers + excluded assumptions.
 
+## Handoff
+
+After completing this skill, recommend the next skill based on output characteristics:
+
+| Condition | Recommend |
+|-----------|-----------|
+| Delegation revealed L0 subtasks | Any project skill as needed |
+
 ## 6. Model Tier
 
 **L1 — Sonnet / atomic tier**: Rule interpretation and orchestration, requires reasoning. This skill is a template reference. See [delegation](../../references/execution-tree.md) for actual execution.

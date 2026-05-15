@@ -306,6 +306,14 @@ curl -X POST "{url}" \
 |------|----------|
 | {路径} | {具体操作} |
 
+## Handoff
+
+After completing a change report, recommend the next skill based on output characteristics:
+
+| Condition | Recommend |
+|-----------|-----------|
+| Changes span ≥3 layers (API→Service→Data→DB) | `{project}-call-chain` |
+
 ---
 
 ## 附录
