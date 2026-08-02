@@ -17,6 +17,7 @@ Use this baseline when reviewing the guide or a generated project skill library.
 - Procedures name evidence, decision points, constraints, deliverables, and verification.
 - Project commands, paths, versions, and contracts are verified rather than inferred.
 - Examples contain no credentials, secrets, personal data, or attribution noise.
+- Process optimization suggestions appear only after direct delivery and documentation; one verified signal may prompt a suggestion, while process change requires explicit owner approval.
 
 ## Library baseline
 

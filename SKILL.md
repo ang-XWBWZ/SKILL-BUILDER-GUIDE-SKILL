@@ -32,6 +32,10 @@ Treat the following as the portable source of truth:
 
 Do not promise automatic discovery, slash commands, model names, or tool syntax unless the target runtime is known and its adapter documents the behavior.
 
+## Delivery order
+
+Keep direct work ahead of process improvement: complete the single request, land and verify its implementation when applicable, and update required documentation before offering an optional process optimization suggestion. One verified friction signal is enough to suggest a small improvement, but never enough to change a project process without explicit authorization. See [the process-optimization guide](references/process-optimization.md).
+
 ## Procedure
 
 ### 1. Establish the need
@@ -80,12 +84,18 @@ Keep adapter material under `.agents/adapters/` and make the installation step e
 
 Run the repository validator against either a single skill or the `.agents/skills/` directory. Verify links, frontmatter, names, placeholders, and the project layout. For claims about source paths, versions, APIs, or commands, verify against the target repository rather than trusting generated prose.
 
+Use Python 3.10 or later. If the active interpreter is named `python3`, replace `python` below.
+
 ```bash
 python scripts/validate-skills.py .agents/skills --project-root .
 python scripts/check-skill-health.py .agents/skills
 ```
 
-Use `--allow-placeholders` only for reusable templates. Before delivery, state what was generated, what evidence supports it, and any unresolved uncertainty.
+Use `--allow-placeholders` only for reusable templates. Before delivery, update required documentation and state what was generated, what evidence supports it, and any unresolved uncertainty.
+
+### 7. Offer an optional process optimization suggestion
+
+Only after the direct request, its implementation, and required documentation are complete, inspect the current delivery for a verified friction signal. At the low suggestion threshold of one signal, offer at most one concise recommendation. Do not create a task, skill, automation, or process change until the user or project owner explicitly authorizes it; use [the process-optimization guide](references/process-optimization.md) for the threshold and output format.
 
 ## Architecture rules
 
@@ -94,6 +104,7 @@ Use `--allow-placeholders` only for reusable templates. Before delivery, state w
 - Prefer a few focused skills over a graph of overlapping instructions.
 - Treat risk as a property of the action and evidence, not of a model label.
 - Preserve existing project conventions unless the user explicitly asks to replace them.
+- Keep process optimization suggestions post-delivery, evidence-based, and non-blocking.
 - Keep local references one hop from `SKILL.md`; repair every relative link after moves.
 - Never insert agent attribution, promotional links, or invented ownership metadata.
 
@@ -108,6 +119,7 @@ Use `--allow-placeholders` only for reusable templates. Before delivery, state w
 | Compose related skills without duplication | [skill composition](references/skill-chain.md) |
 | Make a platform adaptation | [adapter contract](references/adapter-contract.md) |
 | Validate structure and claims | [validation protocol](references/validation-protocol.md) |
+| Offer a low-threshold post-delivery improvement | [process-optimization guide](references/process-optimization.md) |
 | Build a domain-specific skill | [scenario guides](references/scenarios/) |
 
 ## Templates and examples
@@ -116,10 +128,11 @@ Start from [the portable skill skeleton](templates/skill-template.md) and [the A
 
 ## Handoff
 
-Recommend a follow-up only when the current work exposes a measurable need: for example, add an API-contract skill when the project publishes a versioned interface, or a migration skill when a change modifies persistent data. Otherwise, finish with the verified result instead of creating unnecessary skills.
+Recommend a follow-up only when the current work exposes a measurable need: for example, add an API-contract skill when the project publishes a versioned interface, or a migration skill when a change modifies persistent data. A low-threshold process suggestion belongs after the direct delivery and is suggestion-only until explicitly approved. Otherwise, finish with the verified result instead of creating unnecessary skills.
 
 ## Verification
 
 - [ ] Validate generated project skills with the portable validator and project-layout check.
 - [ ] Verify project facts against repository evidence before publishing.
 - [ ] Confirm any runtime adapter in its target environment before claiming discovery or installation behavior.
+- [ ] If an optimization suggestion is included, confirm that delivery came first and that its single signal is documented.

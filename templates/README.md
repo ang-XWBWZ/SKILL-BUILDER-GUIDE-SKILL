@@ -12,6 +12,7 @@ Copy a focused example into `.agents/skills/`, rename its directory to `{project
 | [example-bug-investigation](example-bug-investigation/) | Reproduce, isolate, fix, and prove a regression fix |
 | [example-test-strategy](example-test-strategy/) | Select meaningful test coverage and evidence |
 | [example-feedback-capture](example-feedback-capture/) | Turn recurring feedback into bounded project improvements |
+| [example-process-optimization](example-process-optimization/) | Offer one evidence-backed post-delivery improvement suggestion |
 
 ## Boundary and operations patterns
 
@@ -35,6 +36,8 @@ Copy a focused example into `.agents/skills/`, rename its directory to `{project
 | [project-scaffold](project-scaffold/) | Copy a minimal `AGENTS.md` + `.agents/` layout |
 
 ## Use
+
+需要 Python 3.10 或更高版本；若系统使用 `python3`，请替换以下命令中的 `python`。
 
 ```bash
 cp -R templates/example-api-contract/. my-project/.agents/skills/my-project-api-contract/

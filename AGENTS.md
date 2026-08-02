@@ -16,7 +16,8 @@ Maintain this repository as a portable guide for project-specific agent skills.
 - Update every incoming link when moving or renaming a file.
 - Add a template only when it represents a distinct recurring task with clear inputs, outputs, and verification.
 - Keep examples generic and free of real credentials, project secrets, agent signatures, and promotional text.
-- Run the relevant validator after changing skills, templates, or layout rules.
+- Place any process optimization suggestion after the direct request, implementation, and required documentation; one verified signal may suggest, but only explicit owner direction may change a process.
+- Run the tool regression tests and relevant validator after changing skills, templates, or layout rules.
 
 ## Repository map
 
@@ -27,6 +28,7 @@ Maintain this repository as a portable guide for project-specific agent skills.
 | `references/scenarios/` | Specialized guidance by project concern |
 | `templates/` | Portable skill and entry-point patterns |
 | `scripts/` | Local structural validation and health checks |
+| `tests/` | Regression coverage for local validation, packaging, and link checking |
 | `docs/` | Human-facing onboarding and migration material |
 
 For source ownership and signature behavior, follow [the attribution discipline](docs/attribution-discipline.md).

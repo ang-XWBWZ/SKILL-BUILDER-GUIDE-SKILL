@@ -36,12 +36,16 @@ AGENTS.md
 
 ## 4. 校验并交付
 
+需要 Python 3.10 或更高版本；若系统使用 `python3`，请替换以下命令中的 `python`。
+
 ```bash
 python scripts/validate-skills.py .agents/skills --project-root .
 python scripts/check-skill-health.py .agents/skills
 ```
 
 再逐项确认构建/测试命令、链接、源代码路径和接口契约。只有在某一运行时的安装方式已经验证后，才在 `.agents/adapters/` 添加该运行时的适配说明。
+
+在直接需求、实现和必要文档都完成后，如果本次交付出现 1 条有证据的摩擦信号，可补充 1 条可选的流程优化建议；未经明确授权，不改变流程或创建后续任务。参见[流程优化建议阈值](../references/process-optimization.md)。
 
 ## 示例路线
 

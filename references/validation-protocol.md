@@ -8,7 +8,7 @@ The checker must confirm:
 
 - The input is a skill directory or a directory containing skills.
 - Each skill has `SKILL.md` with a closed frontmatter block.
-- `name` and `description` exist, and the name matches the directory.
+- `name` and `description` use the strict portable frontmatter subset, and the name matches the directory.
 - Relative Markdown links resolve.
 - Production skills contain no unresolved `{placeholder}` values.
 
@@ -18,7 +18,7 @@ When validating a project root, confirm:
 
 - `AGENTS.md` exists.
 - `.agents/skills/` exists and contains at least one skill when the project claims to use skills.
-- Paths listed in the `AGENTS.md` routing table resolve.
+- Canonical `.agents/...` paths listed as Markdown links or inline-code routing entries in `AGENTS.md` resolve.
 - Runtime adapters are optional and do not replace canonical skills.
 
 ## V3 — Evidence checks
@@ -39,3 +39,7 @@ Reusable templates intentionally contain placeholders. Validate them with `--all
 ## Delivery gate
 
 Report structural failures as blockers. Report missing evidence as uncertainty. Do not claim that an unverified command, path, version, or runtime integration works.
+
+## Automation coverage
+
+Run tool regression tests, validate the source skill, validate the template library and nested project scaffold, then check local Markdown links across the repository. Keep the workflow in `.github/workflows/` so GitHub can discover it.

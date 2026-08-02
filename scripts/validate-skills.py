@@ -11,10 +11,12 @@ from pathlib import Path
 
 
 NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-FIELD_PATTERN = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):\s*(.*)$")
+FIELD_PATTERN = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):(?:[ \t]*(.*))?$")
 LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+CODE_SPAN_PATTERN = re.compile(r"`([^`\r\n]+)`")
 PLACEHOLDER_PATTERN = re.compile(r"\{[A-Za-z_][A-Za-z0-9_ -]*\}")
 PORTABLE_FIELDS = {"name", "description"}
+BLOCK_SCALARS = {">", ">-", "|", "|-"}
 
 
 def read_text(path: Path) -> str:
@@ -31,45 +33,144 @@ def split_frontmatter(content: str) -> tuple[str | None, str]:
     return None, content
 
 
-def parse_fields(frontmatter: str) -> dict[str, str]:
+def parse_scalar(value: str, line_number: int, errors: list[str]) -> str:
+    """Parse the deliberately small scalar subset supported by this guide."""
+    value = value.strip()
+    if not value:
+        errors.append(f"line {line_number}: field must have a scalar value")
+        return ""
+
+    if value[0] in {"'", '"'}:
+        quote = value[0]
+        if len(value) < 2 or value[-1] != quote:
+            errors.append(f"line {line_number}: quoted scalar is not closed")
+            return ""
+        return value[1:-1]
+    if value[-1:] in {"'", '"'}:
+        errors.append(f"line {line_number}: quoted scalar is not closed")
+        return ""
+    if value.startswith(("[", "{")):
+        errors.append(f"line {line_number}: collections are not part of portable frontmatter")
+        return ""
+    return value
+
+
+def parse_frontmatter(frontmatter: str) -> tuple[dict[str, str], list[str]]:
+    """Parse the strict, portable YAML subset documented in frontmatter-spec.md.
+
+    A full YAML parser is intentionally unnecessary here: portable skills only need two
+    scalar fields, and accepting arbitrary YAML would hide malformed or runtime-specific
+    metadata from the validator.
+    """
     fields: dict[str, str] = {}
+    errors: list[str] = []
     lines = frontmatter.splitlines()
     index = 0
+
     while index < len(lines):
-        match = FIELD_PATTERN.match(lines[index])
-        if not match:
+        line = lines[index]
+        line_number = index + 1
+        if not line.strip() or line.lstrip().startswith("#"):
             index += 1
             continue
-        key, value = match.groups()
-        value = value.strip()
-        if value in {">", ">-", "|", "|-"}:
-            continuation: list[str] = []
+        if line[0].isspace():
+            errors.append(f"line {line_number}: top-level fields must not be indented")
+            index += 1
+            continue
+
+        match = FIELD_PATTERN.fullmatch(line)
+        if not match:
+            errors.append(f"line {line_number}: expected a top-level 'key: value' entry")
+            index += 1
+            continue
+
+        key, raw_value = match.groups()
+        value = (raw_value or "").strip()
+        if key in fields:
+            errors.append(f"line {line_number}: duplicate frontmatter field '{key}'")
+
+        if value in BLOCK_SCALARS:
+            if key == "name":
+                errors.append(f"line {line_number}: name must be a single-line scalar")
+
+            block_lines: list[str] = []
+            has_content = False
             index += 1
             while index < len(lines):
                 candidate = lines[index]
-                if candidate and not candidate[0].isspace() and FIELD_PATTERN.match(candidate):
-                    index -= 1
+                candidate_number = index + 1
+                if not candidate.strip():
+                    block_lines.append("")
+                    index += 1
+                    continue
+                if candidate[0].isspace():
+                    block_lines.append(candidate.strip())
+                    has_content = True
+                    index += 1
+                    continue
+                if FIELD_PATTERN.fullmatch(candidate) or candidate.lstrip().startswith("#"):
                     break
-                if candidate.strip():
-                    continuation.append(candidate.strip())
+                errors.append(f"line {candidate_number}: block scalar content must be indented")
                 index += 1
-            value = " ".join(continuation)
-        fields[key] = value.strip().strip("\"'")
-        index += 1
-    return fields
+
+            if not has_content:
+                errors.append(f"line {line_number}: block scalar must contain indented text")
+                parsed_value = ""
+            elif value.startswith(">"):
+                parsed_value = " ".join(item for item in block_lines if item)
+            else:
+                parsed_value = "\n".join(block_lines).strip()
+        else:
+            parsed_value = parse_scalar(value, line_number, errors)
+            index += 1
+
+        if key not in fields:
+            fields[key] = parsed_value
+
+    return fields, errors
+
+
+def markdown_target(raw_target: str) -> str:
+    """Return the URL portion of a Markdown destination, excluding any title."""
+    target = raw_target.strip()
+    if target.startswith("<") and ">" in target:
+        target = target[1 : target.index(">")]
+    else:
+        target = target.split(None, 1)[0] if target else ""
+    return target.split("#", 1)[0].replace("\\", "/")
+
+
+def strip_fenced_code(content: str) -> str:
+    """Exclude fenced examples from link validation."""
+    visible: list[str] = []
+    fence: str | None = None
+    for line in content.splitlines(keepends=True):
+        marker = line.lstrip()
+        if marker.startswith(("```", "~~~")):
+            current_fence = marker[:3]
+            if fence is None:
+                fence = current_fence
+                continue
+            if current_fence == fence:
+                fence = None
+                continue
+        if fence is None:
+            visible.append(line)
+    return "".join(visible)
 
 
 def resolve_link(skill_dir: Path, target: str) -> Path | None:
-    target = target.strip().strip("<>")
-    if not target or target.startswith(("#", "http://", "https://", "mailto:")):
+    target = markdown_target(target)
+    if not target or target.startswith(("#", "//")):
         return None
-    target = target.split("#", 1)[0]
+    if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
+        return None
     return (skill_dir / target).resolve()
 
 
 def validate_links(skill_dir: Path, content: str) -> list[str]:
     errors: list[str] = []
-    for target in LINK_PATTERN.findall(content):
+    for target in LINK_PATTERN.findall(strip_fenced_code(content)):
         resolved = resolve_link(skill_dir, target)
         if resolved is not None and not resolved.exists():
             errors.append(f"broken relative link: {target}")
@@ -98,7 +199,8 @@ def validate_skill(
     if frontmatter is None:
         return result, ["SKILL.md must start with a closed frontmatter block"], warnings
 
-    fields = parse_fields(frontmatter)
+    fields, parse_errors = parse_frontmatter(frontmatter)
+    errors.extend(parse_errors)
     result["name"] = fields.get("name", skill_dir.name)
     unknown_fields = sorted(set(fields) - PORTABLE_FIELDS)
     if unknown_fields:
@@ -137,6 +239,27 @@ def discover_skills(path: Path) -> list[Path]:
     return sorted(child for child in path.iterdir() if child.is_dir() and (child / "SKILL.md").is_file())
 
 
+def extract_agents_routes(content: str) -> set[str]:
+    """Collect canonical .agents paths from Markdown links and inline-code routing tables."""
+    routes: set[str] = set()
+
+    def canonicalize(target: str) -> str | None:
+        target = target.strip().replace("\\", "/")
+        if target.startswith("./"):
+            target = target[2:]
+        return target if target.startswith(".agents/") else None
+
+    for target in LINK_PATTERN.findall(content):
+        canonical_target = canonicalize(markdown_target(target))
+        if canonical_target is not None:
+            routes.add(canonical_target)
+    for code_span in CODE_SPAN_PATTERN.findall(content):
+        canonical_target = canonicalize(code_span.strip().split("#", 1)[0])
+        if canonical_target is not None:
+            routes.add(canonical_target)
+    return routes
+
+
 def validate_project_layout(project_root: Path) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -156,9 +279,10 @@ def validate_project_layout(project_root: Path) -> tuple[list[str], list[str]]:
         except UnicodeDecodeError:
             errors.append("AGENTS.md must be UTF-8")
         else:
-            for target in LINK_PATTERN.findall(agents_content):
-                target = target.strip().strip("<>").split("#", 1)[0]
-                if target.startswith(".agents/") and not (project_root / target).exists():
+            for target in sorted(extract_agents_routes(agents_content)):
+                if ".." in Path(target).parts:
+                    errors.append(f"AGENTS.md route must not traverse parent directories: {target}")
+                elif not (project_root / target).exists():
                     errors.append(f"AGENTS.md routes to a missing path: {target}")
     return errors, warnings
 

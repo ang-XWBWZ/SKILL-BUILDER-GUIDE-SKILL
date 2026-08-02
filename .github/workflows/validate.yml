@@ -1,0 +1,51 @@
+name: Validate Portable Skills
+
+on:
+  push:
+    paths:
+      - "AGENTS.md"
+      - "README.md"
+      - "SKILL.md"
+      - ".gitignore"
+      - "docs/**"
+      - "references/**"
+      - "scripts/**"
+      - "templates/**"
+      - "tests/**"
+      - ".github/workflows/validate.yml"
+  pull_request:
+    paths:
+      - "AGENTS.md"
+      - "README.md"
+      - "SKILL.md"
+      - ".gitignore"
+      - "docs/**"
+      - "references/**"
+      - "scripts/**"
+      - "templates/**"
+      - "tests/**"
+      - ".github/workflows/validate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Run tool regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Validate the guide skill
+        run: python scripts/validate-skills.py . --allow-name-mismatch --allow-placeholders
+      - name: Validate portable templates
+        run: python scripts/validate-skills.py templates --allow-placeholders
+      - name: Validate the project scaffold
+        run: python scripts/validate-skills.py templates/project-scaffold/.agents/skills --project-root templates/project-scaffold --allow-placeholders
+      - name: Check template health
+        run: python scripts/check-skill-health.py templates --allow-placeholders
+      - name: Check local Markdown links
+        run: python scripts/check-markdown-links.py .

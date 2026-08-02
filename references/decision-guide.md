@@ -25,6 +25,10 @@ Create skills for recurring project work with stable inputs, a bounded outcome, 
 
 Add one skill at a time. A skill earns its place when it saves a real rediscovery cost, reduces a known risk, or supplies a check that otherwise gets missed.
 
+## Low-threshold suggestions are not new skills
+
+After a direct request, implementation, and required documentation are complete, one verified friction signal is enough to offer one optional process improvement suggestion. It is not enough to create a new skill or change a process. Use the [process-optimization guide](process-optimization.md) for the suggestion threshold and the explicit-approval threshold for change.
+
 ## Boundaries before content
 
 For each candidate, write this mini-contract before authoring it:

@@ -32,7 +32,13 @@ your-project/
 | `references/` | 按需加载的长文档、模式、示例 | 与主 skill 重复的内容 |
 | `adapters/` | 特定运行时的安装或元数据 | 唯一业务规则来源 |
 
+## 交付与流程优化顺序
+
+流程优化建议永远排在直接单次需求、落地实现和必要文档之后。只要当前交付中出现 1 条可验证的摩擦信号，就可以提出 1 条可选建议；但没有用户或项目负责人明确授权时，不得借此修改流程、创建任务或新增 skill。详见[流程优化建议阈值](references/process-optimization.md)。
+
 ## 快速开始
+
+前置条件：Python 3.10 或更高版本。若系统将该解释器命名为 `python3`，请将下列命令中的 `python` 替换为 `python3`。
 
 1. 复制 [项目脚手架](templates/project-scaffold/) 到目标项目。
 2. 根据 [决策指南](references/decision-guide.md) 选择最少的一组 skill。
@@ -56,6 +62,7 @@ python scripts/validate-skills.py templates --allow-placeholders
 - [核心工作流](SKILL.md)
 - [AGENTS.md 规范](references/agents-md-spec.md)
 - [平台适配契约](references/adapter-contract.md)
+- [流程优化建议阈值](references/process-optimization.md)
 - [领域专用指南](references/scenarios/)
 - [通用样例库](templates/README.md)
 - [5 分钟上手](docs/quick-start.md)
