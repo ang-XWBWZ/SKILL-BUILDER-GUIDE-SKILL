@@ -1,232 +1,232 @@
 #!/usr/bin/env python3
-"""验证技能文件的准确性：文件路径存在性、引用完整性、frontmatter 完整性。"""
+"""Validate portable project skills without a runtime-specific dependency."""
 
-import os
-import sys
+from __future__ import annotations
+
+import argparse
+import json
 import re
-import yaml  # requires: pip install pyyaml
+import sys
+from pathlib import Path
 
-if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-def validate_skill(skill_dir):
-    """Validate a single skill directory."""
-    errors = []
-    warnings = []
-    skill_name = os.path.basename(skill_dir)
+NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+FIELD_PATTERN = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*):\s*(.*)$")
+LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+PLACEHOLDER_PATTERN = re.compile(r"\{[A-Za-z_][A-Za-z0-9_ -]*\}")
+PORTABLE_FIELDS = {"name", "description"}
 
-    # 1. 检查必需文件
-    required_files = ["SKILL.md", "agents/openai.yaml"]
-    for f in required_files:
-        path = os.path.join(skill_dir, f)
-        if not os.path.exists(path):
-            errors.append(f"缺少必需文件: {f}")
 
-    # 2. 检查 SKILL.md frontmatter
-    skill_md = os.path.join(skill_dir, "SKILL.md")
-    if os.path.exists(skill_md):
-        with open(skill_md, "r", encoding="utf-8") as f:
-            content = f.read()
-        # 检查 frontmatter 分隔符
-        if not content.startswith("---"):
-            errors.append("SKILL.md: 缺少 frontmatter 起始分隔符 ---")
-        fm = content[:2000]  # v2.0 frontmatter 较长，扩大搜索范围
+def read_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
 
-        # 检查必要字段
-        if "name:" not in fm:
-            errors.append("SKILL.md: 缺少 name 字段")
-        # 检查状态字段
-        if "status:" in fm:
-            status_match = None
-            for line in fm.split("\n"):
-                if line.strip().startswith("status:"):
-                    status_match = line.strip()
+
+def split_frontmatter(content: str) -> tuple[str | None, str]:
+    lines = content.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return None, content
+    for index, line in enumerate(lines[1:], start=1):
+        if line.strip() == "---":
+            return "".join(lines[1:index]), "".join(lines[index + 1 :])
+    return None, content
+
+
+def parse_fields(frontmatter: str) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    lines = frontmatter.splitlines()
+    index = 0
+    while index < len(lines):
+        match = FIELD_PATTERN.match(lines[index])
+        if not match:
+            index += 1
+            continue
+        key, value = match.groups()
+        value = value.strip()
+        if value in {">", ">-", "|", "|-"}:
+            continuation: list[str] = []
+            index += 1
+            while index < len(lines):
+                candidate = lines[index]
+                if candidate and not candidate[0].isspace() and FIELD_PATTERN.match(candidate):
+                    index -= 1
                     break
-            if status_match:
-                status_value = status_match.split(":", 1)[1].strip()
-                valid_statuses = ["draft", "active", "deprecated", "superseded"]
-                if status_value not in valid_statuses:
-                    warnings.append(f"SKILL.md: status 值 '{status_value}' 无效，有效值: {', '.join(valid_statuses)}")
-                if status_value == "superseded" and "supersededBy:" not in fm:
-                    warnings.append("SKILL.md: status 为 superseded 但缺少 supersededBy 字段")
-        else:
-            warnings.append("SKILL.md: 建议添加 status 字段 (draft|active|deprecated|superseded)")
+                if candidate.strip():
+                    continuation.append(candidate.strip())
+                index += 1
+            value = " ".join(continuation)
+        fields[key] = value.strip().strip("\"'")
+        index += 1
+    return fields
 
-        # 检查 review_by (snake_case, v2.0) 或 reviewBy (camelCase, v1.0) 是否过期
-        review_key = None
-        review_date_str = None
-        if "review_by:" in fm:
-            review_key = "review_by"
-        elif "reviewBy:" in fm:
-            review_key = "reviewBy"
-        if review_key:
-            from datetime import datetime
-            for line in fm.split("\n"):
-                if line.strip().startswith(review_key + ":"):
-                    review_date_str = line.strip().split(":", 1)[1].strip()
-                    break
-            if review_date_str:
-                try:
-                    review_date = datetime.strptime(review_date_str, "%Y-%m-%d").date()
-                    if review_date < datetime.now().date():
-                        warnings.append(f"SKILL.md: {review_key} ({review_date_str}) 已过期，建议复核技能内容")
-                except ValueError:
-                    warnings.append(f"SKILL.md: {review_key} 日期格式无效，应为 YYYY-MM-DD")
 
-    # 3. 检查 openai.yaml
-    yaml_path = os.path.join(skill_dir, "agents/openai.yaml")
-    if os.path.exists(yaml_path):
+def resolve_link(skill_dir: Path, target: str) -> Path | None:
+    target = target.strip().strip("<>")
+    if not target or target.startswith(("#", "http://", "https://", "mailto:")):
+        return None
+    target = target.split("#", 1)[0]
+    return (skill_dir / target).resolve()
+
+
+def validate_links(skill_dir: Path, content: str) -> list[str]:
+    errors: list[str] = []
+    for target in LINK_PATTERN.findall(content):
+        resolved = resolve_link(skill_dir, target)
+        if resolved is not None and not resolved.exists():
+            errors.append(f"broken relative link: {target}")
+    return errors
+
+
+def validate_skill(
+    skill_dir: Path,
+    allow_placeholders: bool,
+    allow_name_mismatch: bool,
+) -> tuple[dict, list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    skill_md = skill_dir / "SKILL.md"
+    result = {"path": str(skill_dir), "name": skill_dir.name}
+
+    if not skill_md.is_file():
+        return result, ["missing SKILL.md"], warnings
+
+    try:
+        content = read_text(skill_md)
+    except UnicodeDecodeError:
+        return result, ["SKILL.md must be UTF-8"], warnings
+
+    frontmatter, body = split_frontmatter(content)
+    if frontmatter is None:
+        return result, ["SKILL.md must start with a closed frontmatter block"], warnings
+
+    fields = parse_fields(frontmatter)
+    result["name"] = fields.get("name", skill_dir.name)
+    unknown_fields = sorted(set(fields) - PORTABLE_FIELDS)
+    if unknown_fields:
+        errors.append("portable frontmatter contains unsupported field(s): " + ", ".join(unknown_fields))
+
+    name = fields.get("name", "")
+    if not name:
+        errors.append("frontmatter is missing name")
+    elif not NAME_PATTERN.fullmatch(name):
+        errors.append("name must contain lowercase letters, digits, and hyphens only")
+    elif name != skill_dir.name and not allow_name_mismatch:
+        errors.append(f"name '{name}' does not match directory '{skill_dir.name}'")
+
+    description = fields.get("description", "")
+    if not description:
+        errors.append("frontmatter is missing description")
+    elif len(description) < 30:
+        warnings.append("description is very short; state both outcome and trigger context")
+
+    errors.extend(validate_links(skill_dir, content))
+    if not allow_placeholders and PLACEHOLDER_PATTERN.search(body):
+        errors.append("unresolved placeholder found; use --allow-placeholders only for reusable templates")
+
+    for section in ("## Scope", "## Procedure", "## Verification"):
+        if section not in body:
+            warnings.append(f"recommended section missing: {section}")
+
+    return result, errors, warnings
+
+
+def discover_skills(path: Path) -> list[Path]:
+    if (path / "SKILL.md").is_file():
+        return [path]
+    if not path.is_dir():
+        return []
+    return sorted(child for child in path.iterdir() if child.is_dir() and (child / "SKILL.md").is_file())
+
+
+def validate_project_layout(project_root: Path) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    agents_md = project_root / "AGENTS.md"
+    skills_dir = project_root / ".agents" / "skills"
+
+    if not agents_md.is_file():
+        errors.append("project layout is missing AGENTS.md")
+    if not skills_dir.is_dir():
+        errors.append("project layout is missing .agents/skills/")
+    elif not discover_skills(skills_dir):
+        warnings.append(".agents/skills/ contains no skills")
+
+    if agents_md.is_file():
         try:
-            with open(yaml_path, "r", encoding="utf-8") as f:
-                data = yaml.safe_load(f)
-            if not data:
-                errors.append("agents/openai.yaml: 文件为空或格式错误")
-            else:
-                # 检查 triggers
-                triggers = data.get("triggers", [])
-                if len(triggers) < 5:
-                    warnings.append(f"agents/openai.yaml: triggers 仅 {len(triggers)} 个，建议至少 5 个")
-                if len(triggers) > 15:
-                    warnings.append(f"agents/openai.yaml: triggers 达 {len(triggers)} 个，建议不超过 15 个")
-                # 检查模型等级标注
-                desc = data.get("interface", {}).get("short_description", "")
-                if not any(tag in desc for tag in ["L0", "L1", "L2", "L3"]):
-                    warnings.append("agents/openai.yaml: short_description 未标注模型等级 (L0/L1/L2/L3)")
-        except yaml.YAMLError as e:
-            errors.append(f"agents/openai.yaml: YAML 解析错误: {e}")
-
-    # 4. 检查 Handoff 段 (V2+)
-    skill_md_path = os.path.join(skill_dir, "SKILL.md")
-    if os.path.exists(skill_md_path):
-        with open(skill_md_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        body = content.split("---", 2)[2] if content.startswith("---") and len(content.split("---", 2)) >= 3 else content
-
-        if "## Handoff" not in body:
-            warnings.append("SKILL.md: 缺少 ## Handoff 段 — 建议添加以支持链式激活")
+            agents_content = read_text(agents_md)
+        except UnicodeDecodeError:
+            errors.append("AGENTS.md must be UTF-8")
         else:
-            # 检查 Handoff 中引用的技能是否存在
-            handoff_section = body.split("## Handoff")[1].split("\n## ")[0]
-            referenced_skills = re.findall(r'`(\w+-\w+)`', handoff_section)
-            for ref in referenced_skills:
-                # 在同目录的兄弟技能中查找
-                parent_dir = os.path.dirname(skill_dir)
-                ref_path = os.path.join(parent_dir, ref)
-                if not os.path.exists(ref_path):
-                    warnings.append(f"Handoff: 引用的技能 `{ref}` 在同目录下不存在")
-
-    return skill_name, errors, warnings
+            for target in LINK_PATTERN.findall(agents_content):
+                target = target.strip().strip("<>").split("#", 1)[0]
+                if target.startswith(".agents/") and not (project_root / target).exists():
+                    errors.append(f"AGENTS.md routes to a missing path: {target}")
+    return errors, warnings
 
 
-def validate_semantic(skill_dir):
-    """V3: Validate file paths referenced in SKILL.md body exist."""
-    issues = []
-    skill_md = os.path.join(skill_dir, "SKILL.md")
-    if not os.path.exists(skill_md):
-        return issues
-    with open(skill_md, "r", encoding="utf-8") as f:
-        content = f.read()
-    # Extract relative markdown links
-    import re
-    links = re.findall(r'\[([^\]]*)\]\(([^)]*)\)', content)
-    for label, target in links:
-        if target.startswith("http") or target.startswith("#"):
-            continue
-        target_path = target.split("#")[0]
-        if not target_path:
-            continue
-        full = os.path.normpath(os.path.join(skill_dir, target_path))
-        if not os.path.exists(full):
-            issues.append(f"broken link: [{label}]({target}) -> {full}")
-    return issues
+def format_human(results: list[tuple[dict, list[str], list[str]]], layout_errors: list[str], layout_warnings: list[str]) -> None:
+    for result, errors, warnings in results:
+        status = "FAIL" if errors else "OK"
+        print(f"[{status}] {result['name']} ({result['path']})")
+        for item in errors:
+            print(f"  error: {item}")
+        for item in warnings:
+            print(f"  warning: {item}")
+    for item in layout_errors:
+        print(f"[FAIL] project layout: {item}")
+    for item in layout_warnings:
+        print(f"[WARN] project layout: {item}")
 
 
-def validate_project_paths(skill_dir, project_root):
-    """Cross-verify: check whether file paths claimed in skill body exist in target project."""
-    import re
-    issues = []
-    seen = set()
-    skill_md = os.path.join(skill_dir, "SKILL.md")
-    if not os.path.exists(skill_md):
-        return issues
-    with open(skill_md, "r", encoding="utf-8") as f:
-        content = f.read()
-    # Match backtick-enclosed paths with ≥4 directory levels + file extension
-    # (4+ levels filters out tree fragments like `filter/File.java` or `web/filter/File.java`)
-    pattern = r'`([a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\./]+\.(java|js|vue|py|sh|xml|json|yaml|yml|ts|css|html))`'
-    for match in re.finditer(pattern, content):
-        path = match.group(1)
-        if path.startswith("{") or path.startswith("http") or "..." in path or path in seen:
-            continue
-        seen.add(path)
-        full = os.path.join(project_root, path)
-        if not os.path.exists(full):
-            issues.append(f"claimed path not found in project: `{path}`")
-    return issues
-
-
-def main():
-    import argparse
-    parser = argparse.ArgumentParser(description="Skill validation (V1+V2+V3)")
-    parser.add_argument("root", nargs="?", default=".", help="Skills directory")
-    parser.add_argument("--semantic", action="store_true", help="Run V3 semantic validation (file path existence)")
-    parser.add_argument("--project-path", help="Target project root for cross-verifying claimed file paths")
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Validate portable SKILL.md files and an optional .agents project layout.")
+    parser.add_argument("path", nargs="?", default=".", help="A skill directory or a directory containing direct skill children")
+    parser.add_argument("--project-root", help="Validate AGENTS.md and .agents/skills/ at this project root")
+    parser.add_argument("--allow-placeholders", action="store_true", help="Allow template placeholders in SKILL.md bodies")
+    parser.add_argument(
+        "--allow-name-mismatch",
+        action="store_true",
+        help="Allow a source package directory whose install-time name differs from its skill name",
+    )
+    parser.add_argument("--json", action="store_true", help="Emit a machine-readable report")
     args = parser.parse_args()
-    root = args.root
 
-    print(f"=== 技能验证报告 ===")
-    print(f"扫描目录: {os.path.abspath(root)}\n")
+    target = Path(args.path).resolve()
+    skills = discover_skills(target)
+    results: list[tuple[dict, list[str], list[str]]] = []
+    layout_errors: list[str] = []
+    layout_warnings: list[str] = []
 
-    total_skills = 0
-    all_errors = []
-    all_warnings = []
-
-    for item in os.listdir(root):
-        skill_dir = os.path.join(root, item)
-        if not os.path.isdir(skill_dir):
-            continue
-        skill_md = os.path.join(skill_dir, "SKILL.md")
-        if not os.path.exists(skill_md):
-            continue  # 不是技能目录
-
-        total_skills += 1
-        name, errors, warnings = validate_skill(skill_dir)
-
-        # V3 semantic (optional)
-        if args.semantic:
-            semantic_issues = validate_semantic(skill_dir)
-            for issue in semantic_issues:
-                errors.append(issue)
-
-        # V3+ cross-verification (optional)
-        if args.project_path:
-            cross_issues = validate_project_paths(skill_dir, args.project_path)
-            for issue in cross_issues:
-                errors.append(issue)
-
-        status = "[OK]" if not errors else "[FAIL]"
-        print(f"\n{status} {name}")
-        for e in errors:
-            print(f"  错误: {e}")
-            all_errors.append(f"{name}: {e}")
-        for w in warnings:
-            print(f"  警告: {w}")
-            all_warnings.append(f"{name}: {w}")
-
-    print(f"\n--- 摘要 ---")
-    print(f"扫描技能数: {total_skills}")
-    print(f"错误数: {len(all_errors)}")
-    print(f"警告数: {len(all_warnings)}")
-    if args.semantic:
-        print(f"V3 语义验证: 已启用")
-
-    if all_errors:
-        print("\n[FAIL] 验证未通过，请修复上述错误。")
-        sys.exit(1)
-    elif all_warnings:
-        print("\n[WARN] 验证通过但存在警告。")
+    if not skills:
+        layout_errors.append(f"no skill directories found at {target}")
     else:
-        print("\n[OK] 全部通过！")
+        results = [
+            validate_skill(skill, args.allow_placeholders, args.allow_name_mismatch)
+            for skill in skills
+        ]
+
+    if args.project_root:
+        layout_errors, layout_warnings = validate_project_layout(Path(args.project_root).resolve())
+
+    all_errors = layout_errors + [error for _, errors, _ in results for error in errors]
+    all_warnings = layout_warnings + [warning for _, _, warnings in results for warning in warnings]
+
+    if args.json:
+        print(json.dumps({
+            "skills": [
+                {"skill": result, "errors": errors, "warnings": warnings}
+                for result, errors, warnings in results
+            ],
+            "layout_errors": layout_errors,
+            "layout_warnings": layout_warnings,
+            "error_count": len(all_errors),
+            "warning_count": len(all_warnings),
+        }, ensure_ascii=False, indent=2))
+    else:
+        format_human(results, layout_errors, layout_warnings)
+        print(f"\nSummary: {len(results)} skill(s), {len(all_errors)} error(s), {len(all_warnings)} warning(s)")
+
+    return 1 if all_errors else 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -1,102 +1,46 @@
 ---
 name: example-workflow
-description: >-
-  Development workflow skill template. Guides creation of project-specific
-  workflow skills. Triggered when asking about development steps, phase
-  order, or checklists for common tasks.
-model_tier: L1
-skill_tier: functional
-version: 1.0.0
-status: active
+description: Feature delivery workflow example. Use when creating a project skill for implementing a bounded feature through evidence gathering, design, change, verification, and handoff.
 ---
 
-> *凡事豫则立，不豫则废。* ——《中庸》
-> 好的流程不让你觉得被管着，而是让你不用想下一步做什么。
+# Feature Delivery Example
 
-# Development Workflow Skill Template
+## Scope
 
-> **Positioning**: Functional tier skill — provides **step-by-step workflow guides** for common development tasks. Orchestrated by [delegation](../../references/execution-tree.md) (planning) and [skill-builder-guide](../../SKILL.md) (meta).
+Use this pattern for a normal product change with a clear acceptance outcome. Do not use it for a data migration, emergency release, or security incident; those need dedicated procedures.
 
-## Trigger Conditions
+## Required inputs
 
-- Asking about development steps, phase order, workflow
-- "How do I add a new feature / fix a bug / deploy"
-- Need a checklist for a specific task type
-- Creating project-specific workflow skills
+- Requested behavior, acceptance criteria, and affected user or system boundary.
+- Relevant source paths, tests, and project commands.
 
-## Related Skills
+## Procedure
 
-- [Dev Standards](../example-dev/SKILL.md) — tech stack reference for each step
-- [Code Map](../example-code-map/SKILL.md) — file locations to modify [L0]
-- [Change Model](../../references/change-model.md) — change reports for completed work
+1. Restate the requested behavior and identify explicit non-goals.
+2. Trace the affected code, contract, and persistence boundary before editing.
+3. Choose the smallest implementation that preserves existing behavior outside the request.
+4. Add or update tests that demonstrate the accepted behavior and critical negative case.
+5. Summarize files changed, evidence run, and remaining uncertainty.
 
----
+## Constraints
 
-## 1. Workflow Template
+- Do not broaden a feature into unrelated cleanup without approval.
+- Treat compatibility changes as an API-contract or migration concern.
+- Do not report a test as passed without the command and result.
 
-Each workflow follows: **Phase → Input → Steps → Output → Checklist → Rollback**
+## Deliverable
 
-```markdown
-## {Workflow Name}
+- An implementation, focused tests, and a concise evidence-backed change summary.
 
-**Trigger**: {when to use this workflow}
-**Duration**: {typical time}
+## Verification
 
-### Input
-- {required information / files / branch / ticket}
-
-### Steps
-
-| # | Step | Action | Verification |
-|:-:|------|--------|-------------|
-| 1 | {phase} | {what to do} | {how to verify done} |
-| 2 | {phase} | {what to do} | {how to verify done} |
-
-### Output
-- {deliverables: PR / deploy / test report}
-
-### Checklist
-- [ ] {check item 1}
-- [ ] {check item 2}
-
-### Rollback
-- {how to undo if this goes wrong}
-```
-
-## 2. Common Workflow Types
-
-### Feature Development
-
-```
-Branch from main → Implement → Self-review → Create PR → Code review → Merge → Deploy
-```
-
-### Bug Fix
-
-```
-Reproduce → Locate root cause → Fix → Add regression test → Create PR → Deploy
-```
-
-### Hotfix
-
-```
-Branch from release → Fix → Emergency review → Deploy → Backport to main
-```
-
-## 3. Customization
-
-When generating a project-specific workflow skill, extract workflow information from CI configs, contribution docs, package scripts, and team conventions. Map each step to real project files and commands.
-
-Detailed extraction guide: [references/customization-guide.md](references/customization-guide.md).
+- [ ] Acceptance criteria map to a test, executable check, or reviewed behavior.
+- [ ] Existing behavior outside the request is preserved or explicitly approved to change.
+- [ ] Relevant build and test commands pass.
 
 ## Handoff
 
-After completing this skill, recommend the next skill based on output characteristics:
-
-| Condition | Recommend |
-|-----------|-----------|
-| Changes involved ≥2 modules | `{project}-change-model` |
-
-## 4. Model Tier
-
-**L1 — Sonnet / functional tier**: Requires understanding project workflow conventions and structuring them into actionable step-by-step guides. File lookups delegated to L0 — Haiku.
+| Condition | Next canonical skill |
+|---|---|
+| Public request or response shape changes | `project-api-contract` |
+| Persistent data shape changes | `project-data-migration` |

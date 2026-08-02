@@ -1,33 +1,41 @@
 # Skill Validation Protocol
 
-> *人谁无过，过而能改，善莫大焉。* ——《左传·宣公二年》
-> 信不过自己写的东西，才是写出好东西的开始。
+Validate the portable core before adapting it to a runtime. Run the structural checker, then verify project claims against the target repository.
 
-## Three-Layer Model
+## V1 — Portable structure
 
-| Layer | Checks | Tool |
-|------|--------|------|
-| V1 Format | frontmatter complete, triggers ≥5, YAML valid, no forbidden fields (author/signature/contact) | `validate-skills.py` |
-| V2 Structure | dual-axis consistency, skill references exist, cross-references use relative paths | `validate-skills.py` |
+The checker must confirm:
 
-> V3 Semantic validation (file paths ≥95%, method names ≥90%, versions 100%) is planned but not yet implemented. See project roadmap.
+- The input is a skill directory or a directory containing skills.
+- Each skill has `SKILL.md` with a closed frontmatter block.
+- `name` and `description` exist, and the name matches the directory.
+- Relative Markdown links resolve.
+- Production skills contain no unresolved `{placeholder}` values.
 
-## Acceptance Criteria (Hard)
+## V2 — Project layout
 
-| Declaration | Verification | Pass Rate |
-|------------|-------------|:---:|
-| File paths | Glob/Read to confirm existence | ≥95% |
-| Method names | Grep source to confirm | ≥90% |
-| Version numbers | Read dependency config | 100% |
-| API routes | Read route config | ≥90% |
+When validating a project root, confirm:
 
-Below standard = must not publish.
+- `AGENTS.md` exists.
+- `.agents/skills/` exists and contains at least one skill when the project claims to use skills.
+- Paths listed in the `AGENTS.md` routing table resolve.
+- Runtime adapters are optional and do not replace canonical skills.
 
-## When to Validate
+## V3 — Evidence checks
 
-| Timing | Scope |
-|------|---------|
-| At creation | All declarations (V1+V2) |
-| After refactor | Affected skills (V1+V2) |
-| Quarterly | All skills (V1+V2) |
-| After V3 implemented | Add semantic checks (file paths, method names, versions) |
+Verify the following with project files or commands, not generated prose:
+
+| Claim | Evidence |
+|---|---|
+| Build/test command | Run it or inspect the declared task configuration. |
+| Dependency/version | Read the active dependency manifest or lockfile. |
+| Source path/API | Resolve the path and inspect the declaration. |
+| Workflow/release rule | Read the project’s documented or automated source of truth. |
+
+## Template exception
+
+Reusable templates intentionally contain placeholders. Validate them with `--allow-placeholders`; never use that flag for a generated project skill.
+
+## Delivery gate
+
+Report structural failures as blockers. Report missing evidence as uncertainty. Do not claim that an unverified command, path, version, or runtime integration works.

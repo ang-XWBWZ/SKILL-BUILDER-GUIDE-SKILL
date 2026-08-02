@@ -1,273 +1,55 @@
-# 5-Minute Quick Start
+# 5 分钟建立跨 Agent 项目 Skill
 
-AI Agent development workflow driven by **Change Model**.
+目标不是一次性堆满 skill，而是先把最容易重复、最需要项目事实支撑的工作固化下来。
 
----
+## 1. 建立入口与目录
 
-## Core Concept
+在目标项目创建：
 
-```
-Traditional: Requirements → Code → Test → Deploy
-                ↓
-           Process is untraceable, changes hard to understand
-
-Change Model: Requirements → WHY → WHAT → HOW → VALIDATION → Deploy
-                    ↓      ↓      ↓       ↓
-                 Context  Impact  Design  Verify (call-chain check)
-                    ↓
-              Structured change report, complete causal chain
+```text
+AGENTS.md
+.agents/skills/
+.agents/adapters/
 ```
 
----
+从 [项目脚手架](../templates/project-scaffold/) 开始。`AGENTS.md` 放高优先级约束、真实命令和 skill 路由；详细流程放在 `.agents/skills/`。
 
-## Quick Start
+## 2. 选择一个真实场景
 
-### Scenario: Add a "filter by condition" feature to your project
+优先选择下列之一，而不是创建包罗万象的“开发 skill”：
 
-> **Reading note**: This is a **generic example demonstrating the Change Model workflow**. Replace `{placeholder}` with your project's actual content. Focus on understanding the **four-layer analysis method**, not copying the example text verbatim.
+- 新成员总在问目录、入口和常用命令：创建 `project-context`。
+- 每次功能开发都漏掉测试或兼容性检查：创建 `feature-delivery`。
+- API、数据迁移、发布或权限边界经常出错：选择对应的专用 skill。
 
----
+用 [决策指南](../references/decision-guide.md) 写清楚触发条件、输入、输出、验收和非目标。
 
-### Step 1: WHY — Change Context & Requirements (30s)
+## 3. 从证据填写 skill
 
-**AI Prompt**:
+以 [通用骨架](../templates/skill-template.md) 新建：
 
-```
-Use the change-model skill to analyze the following requirement:
-
-Requirement: {your query endpoint} needs to support filtering by {your filter dimension}.
-Currently, it only returns all results.
-Goal: Add an optional {your filter parameter} to support {your value range} filtering.
-Constraint: Behavior unchanged when {your filter parameter} is not passed. Maintain backward compatibility.
+```text
+.agents/skills/acme-feature-delivery/SKILL.md
 ```
 
-**Output**:
+所有路径、版本、命令、约束都必须来自项目文件或已确认的团队规则。将长表格和领域细节移到同级 `references/`，不要塞进 `AGENTS.md`。
 
-```markdown
-## Change Context
+## 4. 校验并交付
 
-| Element | Description |
-|------|------|
-| Requirement source | {requester} |
-| Trigger reason | Cannot filter by {filter dimension} |
-| Desired outcome | Support {filter parameter} filtering |
-
-## Decision Logic
-
-Input: {required_param} (required), {optional_param} (optional)
-
-Conditions:
-- {optional_param} has value → return matching results
-- {optional_param} empty → return all results
-
-Output: {result_list}
+```bash
+python scripts/validate-skills.py .agents/skills --project-root .
+python scripts/check-skill-health.py .agents/skills
 ```
 
----
-
-### Step 2: WHAT — Impact & Risk (30s)
-
-**AI Prompt**:
-
-```
-Continue using change-model to analyze impact and risk
-```
-
-**Output**:
-
-```markdown
-## Impact Analysis
-
-| Dimension | Impact Description | Severity |
-|------|----------|:----:|
-| Upstream callers | New optional parameter, behavior unchanged when omitted | None |
-| Database | {table_name} read-only query | — |
-
-## Risk Assessment
-
-| Risk | Level | Description | Mitigation |
-|--------|:----:|------|----------|
-| Compatibility | L0 | New optional parameter | Verified behavior unchanged when omitted |
-```
-
----
-
-### Step 3: HOW — Design & Implementation (2 min)
-
-**AI Prompt**:
-
-```
-Use {project}-dev skill to query project tech stack and standards
-Use {project}-code-map skill to locate files that need modification
-
-Then generate the call chain and change file checklist
-```
-
-**Output**:
-
-```markdown
-## Call Chain
-
-Caller
-  │ {method} {endpoint}?{required}=xxx[&{optional}=xxx]
-  ▼
-API Layer ({entry_component})
-  │ Parameter validation → calls service layer
-  ▼
-Service Layer ({service_component})
-  │ Business logic: append filter when {optional} has value
-  ▼
-Data Layer ({data_component})
-  │ {query statement with optional condition}
-  ▼
-Database
-
-## Change File Checklist
-
-| # | Action | File Path | Change Description |
-|:----:|:----:|----------|----------|
-| 1 | ✏️ | `{input_definition_file}` | Add {optional} field |
-| 2 | ✏️ | `{service_file}` | Append filter logic |
-| 3 | ✏️ | `{data_file}` | Add optional query condition |
-```
-
-**Implementation** (pseudocode):
-
-```
-Input struct {
-    {required}: {Type}   // Required, validated
-    {optional}: {Type}   // Optional
-}
-
-ServiceMethod({Input} input):
-    If input.{optional} is not empty:
-        AppendFilter({optional})
-    Return DataLayer.Query(input)
-```
-
----
-
-### Step 4: VALIDATION — Verify & Deliver (1 min)
-
-**AI Prompt**:
-
-```
-Use change-model to perform call-chain check, then generate test cases
-```
-
-**Output**:
-
-```markdown
-## Call-Chain Check
-
-| Check Item | Status | Description |
-|--------|:----:|------|
-| Entry validation | ✅ | {required} required validation active |
-| Type check | ✅ | {optional} type matches, nullable |
-| Final call | ✅ | Query conditions correctly assembled |
-
-## Test Verification
-
-| # | Scenario | Input | Expected | Result |
-|:-:|------|------|----------|:---:|
-| 1 | No optional param | {required}=xxx | Return all results | ✅ |
-| 2 | With optional param | {required}=xxx&{optional}=yyy | Return matching only | ✅ |
-
-## Rollback Plan
-
-Remove the {optional} parameter code.
-```
-
----
-
-## What You Get
-
-| Output | Value |
-|------|------|
-| **Change context doc** | Clear "why changed", traceable |
-| **Impact/risk analysis** | Identify problems early, reduce risk |
-| **Call chain diagram** | Newcomers quickly understand data flow |
-| **Change file checklist** | See what changed at a glance |
-| **Call-chain check** | Ensure correctness before testing |
-| **Test cases** | Clear verification points, executable |
-| **Rollback plan** | Fast recovery if issues arise |
-
----
-
-## Skill Call Quick Reference
-
-> **Note**: Each skill has two dimensions — **execution tier** (who executes, L0-L3) and **composition tier** (position in the skill graph, meta/planning/functional/atomic). The two axes are orthogonal. See project README for details.
-
-| Phase | Skill | Execution | Composition | Purpose |
-|------|----------|:------:|:------:|------|
-| WHY | {project}-change-model | L1 | functional | Requirements analysis, decision logic |
-| WHAT | {project}-change-model | L1 | functional | Impact analysis, risk assessment |
-| HOW | {project}-dev | L1 | atomic | Tech stack, standards lookup |
-| HOW | {project}-code-map | **L0** | atomic | File location [delegate to Haiku] |
-| VALIDATION | {project}-change-model | L1 | functional | Call-chain check + change report |
-
----
-
-## Next Steps
-
-1. **Generate project-specific skills using the templates in this guide**
-
-```
-In Claude Code:
-"Using the templates/example-dev/SKILL.md template structure, scan my project code
- and generate a project-specific {project}-dev development standards skill"
-
-"Using the templates/example-code-map/SKILL.md template structure, analyze my project
- directory and generate a project-specific {project}-code-map code map skill"
-
-"Using the references/change-model.md template structure, adapt to my project's
- tech stack and generate a project-specific {project}-change-model change report skill"
-```
-
-2. **Generate skills to `.claude/skills/` (auto-loaded)**
-
-> Skills generated to `.claude/skills/` are auto-discovered by Claude Code and support `/skill-name` invocation.
-
-3. **Create CLAUDE.md (optional — skills are already auto-loaded)**
-
-With auto-loaded skills, CLAUDE.md only needs mandatory delegation rules and common commands. The skill index is documentation only:
-
-```markdown
-## Mandatory Delegation Rules
-
-Main model must not execute L0 tasks. File operations must delegate to Haiku.
-
-## Available Skills
-
-> Auto-loaded from `.claude/skills/`, supports `/skill-name` invocation.
-
-| Skill | Execution | Composition | Purpose |
-|------|:------:|:------:|------|
-| {project}-dev | L1 | atomic | Dev standards, coding style |
-| {project}-code-map | **L0** | atomic | File location [delegate to Haiku] |
-| {project}-change-model | L1 | functional | Change reports, call-chain checks |
-```
-
-4. **Start using**
-
-```
-Use {project}-change-model to analyze the following requirement: {your requirement description}
-```
-
----
-
-## FAQ
-
-### Q: Why do call-chain checks before testing?
-
-Testing only verifies "correctness of expected inputs". Call-chain checking verifies "data flow integrity". If the chain is broken or types don't match, tests won't even run.
-
-### Q: Why delegate L0 tasks to Haiku?
-
-L0 tasks are mechanical operations (file lookup, info query). Main model processing costs 5-15x more tokens for equivalent results. Delegating to Haiku saves cost.
-
-### Q: What are change reports useful for?
-
-1. **Newcomer understanding** — Quickly understand "why changed, what changed"
-2. **Rollback reference** — Know what to remove if issues arise
-3. **AI context** — AI understands historical change intent for future sessions
+再逐项确认构建/测试命令、链接、源代码路径和接口契约。只有在某一运行时的安装方式已经验证后，才在 `.agents/adapters/` 添加该运行时的适配说明。
+
+## 示例路线
+
+| 需要 | 从这里开始 |
+|---|---|
+| 项目导航 | [example-code-map](../templates/example-code-map/SKILL.md) |
+| 功能交付 | [example-workflow](../templates/example-workflow/SKILL.md) |
+| Bug 定位 | [example-bug-investigation](../templates/example-bug-investigation/SKILL.md) |
+| API 变更 | [example-api-contract](../templates/example-api-contract/SKILL.md) |
+| 数据变更 | [example-data-migration](../templates/example-data-migration/SKILL.md) |
+| 发布与回滚 | [example-release-runbook](../templates/example-release-runbook/SKILL.md) |

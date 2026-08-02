@@ -1,33 +1,35 @@
-# Scripts — L4 Executables
+# Validation scripts
 
-Zero-context execution tools. No LLM dependency.
+Both tools use only the Python standard library and validate the portable core rather than a particular agent runtime.
 
-## validate-skills.py
+## `validate-skills.py`
 
-Validates skill directory completeness: required files, frontmatter format, YAML parsing, model tier tags.
+Validate one skill or a directory that contains direct skill children:
 
 ```bash
-python validate-skills.py .              # Validate root skill
-python validate-skills.py templates/     # Validate template skills
+python scripts/validate-skills.py .agents/skills
+python scripts/validate-skills.py .agents/skills/acme-api-contract
+python scripts/validate-skills.py .agents/skills --project-root .
+python scripts/validate-skills.py templates --allow-placeholders
 ```
 
-Dependency: `pip install pyyaml`
+It checks frontmatter, portable field usage, names, relative links, placeholders, and (when requested) the `AGENTS.md` + `.agents/skills/` project layout.
 
-## check-skill-health.py
+Use `--allow-name-mismatch` only for a source package that will be installed under its canonical skill directory name; generated project skills must keep their directory and `name` identical.
 
-Offline health scan: cross-reference integrity, review_by expiration, token budget, forbidden frontmatter fields. No LLM calls — Haiku (L0) execution.
+## `check-skill-health.py`
+
+Report non-blocking maintenance signals:
 
 ```bash
-python check-skill-health.py .           # Health check root
-python check-skill-health.py templates/  # Health check templates
-python check-skill-health.py . --json    # JSON output
+python scripts/check-skill-health.py .agents/skills
+python scripts/check-skill-health.py templates --allow-placeholders
 ```
 
-## package-skill.py
+## `package-skill.py`
 
-Package a skill directory as `.zip` archive for distribution.
+Package a canonical skill directory for distribution:
 
 ```bash
-python package-skill.py .                          # Package root skill
-python package-skill.py templates/example-dev      # Package a template
+python scripts/package-skill.py .agents/skills/acme-api-contract dist
 ```
