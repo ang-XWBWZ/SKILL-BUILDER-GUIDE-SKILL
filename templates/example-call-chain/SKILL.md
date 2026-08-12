@@ -1,103 +1,45 @@
 ---
 name: example-call-chain
-description: >-
-  Call-chain tracing skill template. Guides creation of project-specific
-  call-chain skills for tracing API data flow, verifying type matching,
-  and checking endpoint correctness.
-model_tier: L1
-skill_tier: functional
-version: 1.0.0
-status: active
+description: Integration tracing example. Use when creating a project skill that traces a request, event, job, or data flow across components and verifies boundaries, transformations, and final side effects.
 ---
 
-> *牵一发而动全身。* ——龚自珍《自春徂秋偶有所触》
-> 改一行代码之前先知道谁在调用它。这不是顾虑，是常识。
+# Integration Trace Example
 
-# Call-Chain Tracing Skill Template
+## Scope
 
-> **Positioning**: Functional tier skill — provides **structured call-chain tracing methodology** for verifying data flow correctness. Orchestrated by [delegation](../../references/execution-tree.md) (planning) and [skill-builder-guide](../../SKILL.md) (meta).
+Use this pattern to establish an evidence-backed path from trigger to side effect. Do not use it to prescribe a project architecture that source evidence does not support.
 
-## Trigger Conditions
+## Required inputs
 
-- Tracing API call chains, data flow, request lifecycle
-- "How does data flow from X to Y"
-- "What calls what in this endpoint"
-- Verifying type matching across layers
-- Creating project-specific call-chain skills
+- A concrete request, event, job, or user action.
+- Source declarations at each boundary and the relevant tests or telemetry.
 
-## Related Skills
+## Procedure
 
-- [Dev Standards](../example-dev/SKILL.md) — layer conventions and naming
-- [Code Map](../example-code-map/SKILL.md) — file locations [L0]
-- [Change Model](../../references/change-model.md) — call-chain check integration
+1. Identify the trigger and its validated input shape.
+2. Follow each transformation, service call, queue publish, persistence write, or external request.
+3. Record assumptions, type or schema transitions, error handling, and idempotency points.
+4. Verify the final side effect and the observable result returned to the caller.
 
----
+## Constraints
 
-## 1. Tracing Method
+- Distinguish proven links from inferred links.
+- Include asynchronous consumers and retries where they affect correctness.
+- Do not expose secrets or production identifiers in the trace.
 
-```
-Step 1: Identify entry point
-  ├─ API endpoint / event handler / scheduled task / message consumer
-  └─ Record: input types, validation rules
+## Deliverable
 
-Step 2: Trace through layers
-  ├─ Entry layer → Business layer → Data layer → External calls
-  └─ Record at each layer: method name, parameter types, return type
+- A compact flow diagram or table with evidence paths, boundary checks, and unresolved gaps.
 
-Step 3: Verify final call
-  ├─ SQL query / external API call / message publish / cache write
-  └─ Check: parameters correctly assembled, types match
+## Verification
 
-Step 4: Error path check
-  ├─ Exceptions caught at each layer?
-  └─ Error response includes correct status code?
-```
-
-## 2. Call-Chain Template
-
-```markdown
-## {Endpoint Name} Call Chain
-
-{Caller}
-  │ {HTTP method} {path}
-  ▼
-{Controller}.{method}({param}: {type})
-  │ → calls {Service}.{method}({param}: {type})
-  ▼
-{Service}.{method}({param}: {type})
-  │ → business logic: {summary}
-  │ → calls {Repository}.{method}({query})
-  ▼
-{Repository}.{method}({query})
-  │ → {SQL / external API / message}
-  ▼
-{Database / External Service}
-```
-
-## 3. Type Matching Checklist
-
-| # | Layer Transition | Check | Status |
-|:-:|------|------|:--:|
-| 1 | Request → Controller | Param types match DTO | ✅/❌ |
-| 2 | Controller → Service | Service param = DTO or derived type | ✅/❌ |
-| 3 | Service → Repository | Query params match Prisma/SQL types | ✅/❌ |
-| 4 | Service → External | API contract types match | ✅/❌ |
-| 5 | Service → Response | Return type matches API schema | ✅/❌ |
-
-## 4. Customization
-
-When generating a project-specific call-chain skill, map the project's actual layer names to the tracing template. Include project-specific external API call signatures, error handling patterns, and one worked example of a real endpoint's full chain.
-
-Architecture-specific tracing patterns (CLI, event-driven, frontend, layered backend): [references/tracing-patterns.md](references/tracing-patterns.md).
+- [ ] Each hop has a source path, trace, or documented interface as evidence.
+- [ ] Input and output contracts are compared at every meaningful boundary.
+- [ ] Failure and retry behavior is covered where applicable.
 
 ## Handoff
 
-After completing this skill, recommend the next skill based on output characteristics:
-
-| Condition | Recommend |
-|-----------|-----------|
-| New change requirement found | `{project}-change-model` |
-
-## 5. Model Tier
-
-**L1 — Sonnet / functional tier**: Requires code-level tracing and type-compatibility reasoning. File lookups delegated to L0 — Haiku.
+| Condition | Next canonical skill |
+|---|---|
+| A public contract changes | `project-api-contract` |
+| A risky production side effect is introduced | `project-security-review` |

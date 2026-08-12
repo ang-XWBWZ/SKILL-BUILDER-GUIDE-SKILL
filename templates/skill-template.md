@@ -1,58 +1,61 @@
-# Skill Template
+# Portable SKILL.md Template
 
-> *大匠诲人，必以规矩；学者亦必以规矩。* ——《孟子·告子上》
-> 模板是骨架，项目是血肉。骨架对了，血肉才长得正。
-
-> Replace `{placeholder}` with project-specific content. Add/remove sections as needed.
-> Attribution: do not add author signatures, agent names, or promotional links. See [docs/attribution-discipline.md](../docs/attribution-discipline.md).
-
----
+Replace every `{placeholder}` with verified project information before placing the file in `.agents/skills/{project}-{capability}/SKILL.md`.
 
 ```markdown
 ---
-name: {project}-{skill-type}
+name: {project}-{capability}
 description: >-
-  {Project} {skill purpose}. Triggered when {trigger scenarios}.
-model_tier: {L0|L1|L2|L3}
-skill_tier: {meta|planning|functional|atomic}
-version: 1.0.0
-status: active
+  {Project} {capability} workflow. Use when {specific requests, conditions,
+  or project vocabulary that should trigger this skill}.
 ---
 
-# {Project} {Skill Name}
+# {Project} {Capability}
 
-## Trigger Conditions
+## Scope
 
-- {trigger scenario 1}
-- {trigger scenario 2}
-- {trigger scenario 3}
+Use this skill to {bounded outcome}. Do not use it to {nearby non-goal}; use
+`{other-skill}` when that condition applies.
 
-## Related Skills
+## Required inputs
 
-- [{Related Skill}](../{skill-path}/SKILL.md) — purpose
-- 全局技能（`~/.claude/skills/`）可能已有相关功能，用 `/skills` 查看
+- {ticket, files, user decision, or evidence required before acting}
 
----
+## Procedure
 
-## 1. {Section Title}
+1. {verified first step}
+2. {decision point and evidence to collect}
+3. {change or analysis step}
+4. {verification step}
 
-| Column 1 | Column 2 | Notes |
-|-----|-----|------|
-| {content} | {content} | {notes} |
+## Constraints
 
-## 2. {Section Title}
+- {compatibility, security, or ownership constraint}
 
-{content}
+## Deliverable
+
+- {files, report, decision, or implementation result}
+
+## Verification
+
+- [ ] {observable check}
+- [ ] {command, test, or review evidence}
+
+## Completion report
+
+- Result: {observable outcome}
+- Changes: {files, configuration, or decision; write “none” for analysis-only work}
+- Acceptance and verification: {actual evidence and result}
+- Open items: {uncertainty, risk, follow-up, or “none”}
+- Status: completed / blocked / failed pending action / cancelled
+
+Use a project delivery record when the work has multiple steps, explicit closure requirements, or material recovery risk.
 
 ## Handoff
 
-After completing this skill, recommend the next skill based on output characteristics:
-
-| Condition | Recommend |
-|-----------|-----------|
-| {measurable condition} | `{project}-{skill_name}` |
-
-## Model Tier
-
-**L{N} — {Model} / {tier} tier**: {reason}
+| Condition | Next canonical skill |
+|---|---|
+| {measurable condition} | `{project}-{other-capability}` |
 ```
+
+Keep runtime metadata and installation notes out of this file; put them in `.agents/adapters/`.
