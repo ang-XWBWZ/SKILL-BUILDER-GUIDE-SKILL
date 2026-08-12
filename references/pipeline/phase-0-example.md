@@ -2,6 +2,8 @@
 
 Use this phase to choose a minimal skill set from verified project signals.
 
+Before this analysis, confirm the current operation, target boundary, and requested maturity through [the consultation protocol](../consultation-protocol.md). Do not treat a broad or repeated builder trigger as an instruction to generate a new library.
+
 ## Example project profile
 
 - A TypeScript service with a web API, persistent storage, and automated tests.

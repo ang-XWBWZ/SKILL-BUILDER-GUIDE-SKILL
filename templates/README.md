@@ -11,6 +11,8 @@ Copy a focused example into `.agents/skills/`, rename its directory to `{project
 | [example-workflow](example-workflow/) | Deliver a feature with decision points and verification |
 | [example-bug-investigation](example-bug-investigation/) | Reproduce, isolate, fix, and prove a regression fix |
 | [example-test-strategy](example-test-strategy/) | Select meaningful test coverage and evidence |
+| [example-iteration-management](example-iteration-management/) | Plan, record, verify, and close consequential delivery work |
+| [example-knowledge-capture](example-knowledge-capture/) | Distill verified reusable knowledge into a separate knowledge area |
 | [example-feedback-capture](example-feedback-capture/) | Turn recurring feedback into bounded project improvements |
 | [example-process-optimization](example-process-optimization/) | Offer one evidence-backed post-delivery improvement suggestion |
 
@@ -33,15 +35,18 @@ Copy a focused example into `.agents/skills/`, rename its directory to `{project
 | [agents-md-template.md](agents-md-template.md) | Start the root `AGENTS.md` |
 | [adapter-template.md](adapter-template.md) | Document a verified runtime adaptation |
 | [change-model-template.md](change-model-template.md) | Record WHY / WHAT / HOW / VALIDATION for a change |
+| [iteration-record-template.md](iteration-record-template.md) | Record scope, work, evidence, risk, and closure for a delivery |
+| [knowledge-note-template.md](knowledge-note-template.md) | Record reusable project knowledge with evidence and refresh conditions |
 | [project-scaffold](project-scaffold/) | Copy a minimal `AGENTS.md` + `.agents/` layout |
 
 ## Use
 
-需要 Python 3.10 或更高版本；若系统使用 `python3`，请替换以下命令中的 `python`。
-
 ```bash
 cp -R templates/example-api-contract/. my-project/.agents/skills/my-project-api-contract/
-python scripts/validate-skills.py my-project/.agents/skills/my-project-api-contract
 ```
 
-For a reusable template library, placeholders are allowed. Generated project skills must have no unresolved placeholders.
+Replace illustrative facts with target-project evidence, then review the resulting trigger, scope, procedure, evidence sources, and completion expectation in the target project. Use [the evidence-review guide](../references/evidence-review.md); do not treat a fixed template shape as proof that a skill will trigger or perform well.
+
+The delivery-record template is an output artifact, not a canonical skill. Copy and adapt it only when the target project needs traceable delivery records; keep project-specific storage, naming, approvals, and retention in the target project.
+
+The knowledge-note template is a separate output artifact. Use it only after the target project selects an existing or approved new knowledge destination; do not use it as a delivery log or source-diff copy.

@@ -2,6 +2,8 @@
 
 Use a change model for work that benefits from a durable causal record: a cross-module feature, a risky bug fix, an interface change, a migration, or a release-sensitive implementation.
 
+Use a change model to explain why a design was chosen. Use [traceable delivery guidance](iteration-management.md) to record the lifecycle and completion evidence for one delivery, version control to retain exact source differences, and [knowledge management guidance](knowledge-management.md) to preserve reusable conclusions. Link the records when useful instead of copying the same analysis, commands, logs, or source diffs.
+
 ## Four-layer record
 
 | Layer | Record |

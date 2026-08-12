@@ -13,20 +13,20 @@ description: Explain what the skill does and the requests or conditions that sho
 
 | Field | Rule |
 |---|---|
-| `name` | Lowercase letters, digits, and hyphens; 1–64 characters; matches the skill directory name. |
+| `name` | Lowercase letters, digits, and hyphens; keep it short and align it with the skill directory name. |
 | `description` | States the outcome and concrete trigger contexts. Prefer 30–150 words. |
 
 ## Portable syntax subset
 
-The bundled validator intentionally accepts only a small YAML subset, so malformed metadata is not silently treated as valid:
+Keep metadata simple enough to read and adapt across runtimes:
 
 - Use unindented, top-level `key: value` entries only; blank lines and comments are allowed.
-- Use exactly one `name` and one `description`; duplicate keys are errors.
+- Use exactly one `name` and one `description`; avoid duplicate keys.
 - Write `name` as a single-line scalar.
 - Write `description` as a single-line scalar or an indented folded/literal block (`>-`, `>`, `|-`, or `|`). Every non-empty block line must be indented.
 - Quote a scalar only with a matching opening and closing quote. Collections such as `[a, b]` and `{key: value}` are not portable frontmatter.
 
-For example, this is valid:
+For example:
 
 ```yaml
 ---
@@ -36,7 +36,7 @@ description: >-
 ---
 ```
 
-This is invalid because the description line is not indented:
+Do not use an unindented block description:
 
 ```yaml
 description: >-

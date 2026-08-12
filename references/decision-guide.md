@@ -2,7 +2,11 @@
 
 Create skills for recurring project work with stable inputs, a bounded outcome, and evidence that can be refreshed. Do not create a broad “do everything” skill.
 
-## Ask four questions
+## Confirm the current operation
+
+Before selecting skills, use [the consultation protocol](consultation-protocol.md) to determine whether the user wants to initialize, assess, repair, extend, migrate, review, or only plan. A repeated builder trigger does not by itself authorize generation or replacement.
+
+## Then ask four selection questions
 
 | Question | What it reveals |
 |---|---|
@@ -22,8 +26,14 @@ Create skills for recurring project work with stable inputs, a bounded outcome, 
 | Production release steps or rollback | `release-runbook` |
 | Sensitive boundaries, secrets, or permissions | `security-review` |
 | Repeated incident diagnosis | `bug-investigation` |
+| Consequential deliveries need a repeatable scope-to-closure evidence trail | `iteration-management` |
+| Verified conclusions repeatedly need reuse outside their original delivery | `knowledge-capture` |
 
 Add one skill at a time. A skill earns its place when it saves a real rediscovery cost, reduces a known risk, or supplies a check that otherwise gets missed.
+
+An iteration-management skill owns the lifecycle record for a bounded delivery; it does not replace the specialized skill that owns API, data, release, or security decisions. Add it when the project repeatedly needs comparable completion evidence, explicit closure gates, or a reliable history of plan-versus-actual differences.
+
+A knowledge-capture skill owns the extraction of reusable conclusions into the selected knowledge area; it does not replace version-control history or delivery records. Add it only when a knowledge destination and ongoing update responsibility exist.
 
 ## Low-threshold suggestions are not new skills
 
@@ -31,7 +41,7 @@ After a direct request, implementation, and required documentation are complete,
 
 ## Boundaries before content
 
-For each candidate, write this mini-contract before authoring it:
+For each candidate selected after consultation, write this mini-contract before authoring it:
 
 ```text
 Trigger:      {specific request or condition}

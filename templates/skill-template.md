@@ -41,6 +41,16 @@ Use this skill to {bounded outcome}. Do not use it to {nearby non-goal}; use
 - [ ] {observable check}
 - [ ] {command, test, or review evidence}
 
+## Completion report
+
+- Result: {observable outcome}
+- Changes: {files, configuration, or decision; write “none” for analysis-only work}
+- Acceptance and verification: {actual evidence and result}
+- Open items: {uncertainty, risk, follow-up, or “none”}
+- Status: completed / blocked / failed pending action / cancelled
+
+Use a project delivery record when the work has multiple steps, explicit closure requirements, or material recovery risk.
+
 ## Handoff
 
 | Condition | Next canonical skill |
