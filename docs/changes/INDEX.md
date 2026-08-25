@@ -1,18 +1,15 @@
-# 变更索引
+# Change index
 
-## 按时间排序（最新在前）
+## Current architecture changes
 
-| 日期 | 报告 | 类型 | 范围 | 状态 |
-|------|------|:----:|------|:----:|
-| 2026-04-28 | [Tectonic — Agent-Native Skill Architecture v2.0](2026-04-28/20260428-01-tectonic-agent-native-skill-architecture.md) | refactor | skills | DONE |
+| Date | Record | Type | Scope | Status |
+|---|---|:---:|---|:---:|
+| 2026-08-12 | [Evidence review replaces structural gates](2026-08-12/20260812-04-evidence-review-over-structural-gates.md) | refactor | guide, tooling, onboarding | complete |
+| 2026-08-12 | [Knowledge, delivery, and entry-point governance](2026-08-12/20260812-03-knowledge-delivery-entrypoint-governance.md) | feature | guide, templates, evidence review | complete |
+| 2026-08-12 | [Consultation gate for skill construction](2026-08-12/20260812-02-consultation-gate.md) | feature | guide, evidence review, onboarding | complete |
+| 2026-08-12 | [Traceable delivery management](2026-08-12/20260812-01-traceable-delivery-management.md) | feature | guide, templates, evidence review | complete |
+| 2026-08-02 | [Portable project skill architecture](2026-08-02/20260802-01-portable-project-skill-architecture.md) | refactor | guide, templates, tooling | complete |
 
-## 按类型排序
+## Historical note
 
-### 功能开发
-
-### Bug 修复
-
-### 重构
-- 2026-04-28 [Tectonic — Agent-Native Skill Architecture v2.0](2026-04-28/20260428-01-tectonic-agent-native-skill-architecture.md) — `skills`
-
-### 配置变更
+The earlier architecture record is retained as a short historical marker. Detailed obsolete design material is available through repository history and is not a source for current implementation decisions.

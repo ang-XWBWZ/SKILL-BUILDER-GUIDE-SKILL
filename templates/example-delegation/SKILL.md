@@ -1,93 +1,45 @@
 ---
 name: example-delegation
-description: >-
-  Delegation rules skill template. Used to guide creation of project-specific
-  delegation rules. Defines which tasks must be delegated to Haiku,
-  delegation format, and sub-agent output standards.
-model_tier: L1
-skill_tier: atomic
-version: 1.2.0
-status: active
+description: Evidence-work decomposition example. Use when creating a project skill that splits independent investigation, review, or verification tasks while preserving scope, provenance, and clear merge criteria.
 ---
 
-> *知人者智，自知者明。* ——《道德经》
-> 把对的任务交给对的模型，不是省 token，是尊重每一层的能力边界。
+# Evidence Work Decomposition Example
 
-# Delegation Rules Skill Template
+## Scope
 
-> **Position**: Atomic tier / L1 execution tier — a **reference template** for other projects to create project-level delegation rules. Composed by [skill-builder-guide](../../SKILL.md) (meta).
->
-> **Full implementation**: See [delegation](../../references/execution-tree.md) (planning tier) for this project's actual delegation skill.
+Use this pattern to split work into independently verifiable evidence packets. Do not use it to impose a particular agent hierarchy, model tier, or tool syntax.
 
-## Trigger Conditions
+## Required inputs
 
-- Creating delegation rules skill / Defining L0 task delegation rules
-- Asking "should this task be delegated"
-- Need delegation rules template reference
+- A bounded objective and the relevant repository or external scope.
+- Known risks, dependencies, and the decision that will consume the results.
 
-## Related Skills
+## Procedure
 
-- [Delegation](../../references/execution-tree.md) — actual planning-tier delegation skill used by this project
-- [Dev Standards](../example-dev/SKILL.md) — L0 info lookup scenarios
-- [Code Map](../example-code-map/SKILL.md) — L0 file location scenarios [L0]
+1. Divide work by independent evidence source, such as code structure, test behavior, API contract, or release configuration.
+2. Give each packet a concrete question, allowed scope, expected artifacts, and exit condition.
+3. Require every packet to separate conclusion, evidence, and uncertainty.
+4. Merge only after checking contradictions and gaps against the original objective.
 
----
+## Constraints
 
-## 1. Mandatory Delegation Principle
+- Keep destructive, privileged, or external actions outside a discovery packet unless explicitly authorized.
+- Do not pass an intended conclusion to an independent reviewer.
+- Escalate when evidence conflicts or a decision requires owner authority.
 
-**Main model must not execute L0 tasks.** All L0 tasks must be delegated via `Agent(model: "haiku")`.
+## Deliverable
 
-## 2. L0 Task Catalog
+- A merged decision record with traceable evidence and a list of unresolved risks.
 
-| Category | Example Tasks | Target Skill |
-|------|---------|---------|
-| File lookup | Find file location, directory structure | code-map |
-| Info lookup | Check version number, API routes | dev |
-| Command execution | Deploy, package, service start/stop | scripts |
-| Static tracing | Draw dataflow diagram, verify API list | code-map / dev |
-| Mechanical edit | Rename variable, update version number | (direct) |
+## Verification
 
-## 3. Standard Delegation Format
-
-```
-Agent(
-  description: "3-5 word task description",
-  model: "haiku",
-  prompt: """
-    【Task】What specifically to do
-    【Files】List of paths to read
-    【Output】Conclusion/Basis/Uncertainty format
-  """
-)
-```
-
-## 4. Sub-Agent Output Format
-
-```
-Conclusion:   One sentence answering the assigned goal
-Basis:        Specific evidence, observations, reasoning path
-Uncertainty:  Risks, missing information, failure modes (write "None" if none)
-```
-
-Main model does only three things after receiving: extract conclusions → identify conflicts → decide.
-
-## 5. Upgrade / Fallback Strategy
-
-| Trigger | Threshold | Action |
-|---------|------|------|
-| User repeatedly unsatisfied | Same task ≥2 correction rounds failed | Package context, submit to top-tier model |
-| Work rework | Same code repeatedly modified, problem not converging | Stop modifying, re-analyze root cause |
-
-**Upgrade info package**: Original requirements + attempted solutions and failure reasons + current blockers + excluded assumptions.
+- [ ] Packets have non-overlapping evidence goals.
+- [ ] Every conclusion names supporting paths, commands, or artifacts.
+- [ ] Merge notes resolve or retain every contradiction.
 
 ## Handoff
 
-After completing this skill, recommend the next skill based on output characteristics:
-
-| Condition | Recommend |
-|-----------|-----------|
-| Delegation revealed L0 subtasks | Any project skill as needed |
-
-## 6. Model Tier
-
-**L1 — Sonnet / atomic tier**: Rule interpretation and orchestration, requires reasoning. This skill is a template reference. See [delegation](../../references/execution-tree.md) for actual execution.
+| Condition | Next canonical skill |
+|---|---|
+| A repeated evidence pattern emerges | `project-context` |
+| A risky boundary needs a decision | `project-security-review` |

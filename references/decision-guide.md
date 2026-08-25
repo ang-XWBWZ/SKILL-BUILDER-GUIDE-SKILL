@@ -1,100 +1,58 @@
----
-name: decision-guide
-description: Decision tree methodology for choosing which skills to generate for a project, based on project scope, AI autonomy expectations, and existing documentation.
-model_tier: L3
-skill_tier: meta
-version: 1.0.0
-status: active
----
+# Decision Guide — Select the First Skills
 
-# Decision Guide — Skill Initialization Methodology
+Create skills for recurring project work with stable inputs, a bounded outcome, and evidence that can be refreshed. Do not create a broad “do everything” skill.
 
-> *知人者智，自知者明。* ——《道德经》
-> The right skill, at the right time, for the right project.
+## Confirm the current operation
 
-> **Load when**: ANALYZE phase — deciding which skills to generate for a project.
-> **Principle**: The guide asks questions. The human answers. No presets.
+Before selecting skills, use [the consultation protocol](consultation-protocol.md) to determine whether the user wants to initialize, assess, repair, extend, migrate, review, or only plan. A repeated builder trigger does not by itself authorize generation or replacement.
 
----
+## Then ask four selection questions
 
-## 1. Three Decision Questions
+| Question | What it reveals |
+|---|---|
+| Which work repeatedly makes contributors search the same files or conventions? | Candidate project-context or code-map skill |
+| Which change classes have a repeated sequence and acceptance criteria? | Candidate workflow skill |
+| Which boundary can cause compatibility, data, security, or release risk? | Candidate specialized skill |
+| Which facts change often enough to require a refresh source? | Reference layout and maintenance plan |
 
-### Question 1: What's your project scope?
+## Start small
 
-| Answer | Signal |
-|------|------|
-| Quick fixes / solo prototype | Single module, ≤2 people, short-term |
-| Ongoing product / small team | 2-5 modules, 2-5 people, no end date |
-| Multi-module / multi-service / handoff needed | 5+ modules, multiple data sources, team turnover |
+| Signal | First skill to create |
+|---|---|
+| New or unfamiliar repository | `project-context` or `code-map` |
+| Repeated feature delivery with reviews/tests | `feature-delivery` |
+| Versioned or externally consumed API | `api-contract` |
+| Persistent data changes | `data-migration` |
+| Production release steps or rollback | `release-runbook` |
+| Sensitive boundaries, secrets, or permissions | `security-review` |
+| Repeated incident diagnosis | `bug-investigation` |
+| Consequential deliveries need a repeatable scope-to-closure evidence trail | `iteration-management` |
+| Verified conclusions repeatedly need reuse outside their original delivery | `knowledge-capture` |
 
-### Question 2: How autonomous should the AI be?
+Add one skill at a time. A skill earns its place when it saves a real rediscovery cost, reduces a known risk, or supplies a check that otherwise gets missed.
 
-| Answer | Meaning |
-|------|------|
-| Passive lookup only | Answer questions, don't suggest |
-| Independent within a module | Understand context, operate autonomously within module boundaries |
-| Cross-module analysis, proactive reporting | Alert on cross-module impacts without being asked |
+An iteration-management skill owns the lifecycle record for a bounded delivery; it does not replace the specialized skill that owns API, data, release, or security decisions. Add it when the project repeatedly needs comparable completion evidence, explicit closure gates, or a reliable history of plan-versus-actual differences.
 
-### Question 3: Do you have existing conventions documented?
+A knowledge-capture skill owns the extraction of reusable conclusions into the selected knowledge area; it does not replace version-control history or delivery records. Add it only when a knowledge destination and ongoing update responsibility exist.
 
-| Answer | Meaning |
-|------|------|
-| No, extract from code | Full SCAN, infer conventions from source |
-| Yes, use them | User docs take priority, SCAN fills gaps |
+## Low-threshold suggestions are not new skills
 
----
+After a direct request, implementation, and required documentation are complete, one verified friction signal is enough to offer one optional process improvement suggestion. It is not enough to create a new skill or change a process. Use the [process-optimization guide](process-optimization.md) for the suggestion threshold and the explicit-approval threshold for change.
 
-## 2. Answers → Natural Skill Set
+## Boundaries before content
 
-No preset combos. The agent recommends a skill list based on the answer combination, and explains why to the human.
+For each candidate selected after consultation, write this mini-contract before authoring it:
 
-### Derivation Logic (for the agent)
-
-```
-Decision:
-  dev — every project needs it (tech stack + code conventions)
-  code-map — recommended when scope > "solo prototype"
-  workflow — recommended when autonomy > "passive"
-  change-model — recommended when autonomy = "cross-module"
-  call-chain — multi-service + cross-module autonomy
-  delegation — team >1 or cross-module autonomy
-  CLAUDE.md modules — per claude-md-spec.md §4 matrix
+```text
+Trigger:      {specific request or condition}
+Inputs:       {project facts, files, ticket, or evidence required}
+Output:       {decision, files, report, or verified result}
+Verification: {observable check}
+Non-goals:    {nearby work owned by another skill}
 ```
 
-### Output Format
+If Trigger and Non-goals cannot be distinguished, merge or defer the candidate instead of creating two overlapping skills.
 
-```
-Based on your answers, I suggest generating these skills:
+## Review cadence
 
-  {project}-dev — {rationale}
-  {project}-code-map — {rationale} (or: not recommended, because...)
-  ...
-
-OK? Or adjust as you like.
-```
-
----
-
-## 3. Quick-Start vs Full Pipeline
-
-The human can say "quick start" or "full pipeline" at any time:
-
-| Choice | Meaning |
-|------|------|
-| "Quick start" | Skip deep scan and validation. Deliver in ≤5 min. Can re-run VALIDATE later |
-| "Full pipeline" | ANALYZE→SCAN→GENERATE→VALIDATE→CONFIRM, all five phases |
-
-Neither is presumed better. Quick-start makes sense for prototypes; full pipeline for production. Let the human choose.
-
----
-
-## 4. Ongoing Extension
-
-Skill generation isn't a one-time event. As the project evolves, offer to add skills:
-
-```
-"Your project now has a message queue — add call-chain?"
-"New team member joining — add code-map?"
-```
-
-The agent asks proactively during the CONFIRM phase.
+Refresh a skill after a structural refactor, toolchain change, new external contract, or repeated correction. Remove a skill when the underlying workflow no longer exists.
